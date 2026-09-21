@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Product Studio & Live Multimodal Copilot</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --surface: #131b34;
+      --surface-alt: #1b2547;
+      --accent: #4f8cff;
+      --accent-2: #34d399;
+      --text: #f3f6ff;
+      --muted: #9fb0d6;
+      --border: #2a3764;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top right, #182347, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(19, 27, 52, 0.85);
+      backdrop-filter: blur(12px);
+    }
+    .brand h1 { margin: 0; font-size: 1.25rem; letter-spacing: -0.02em; }
+    .brand p { margin: 0.25rem 0 0; font-size: 0.85rem; color: var(--muted); }
+    .lang-toggle {
+      background: var(--surface-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    main {
+      max-width: 1280px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .card h2 { margin: 0; font-size: 1.05rem; color: var(--accent); }
+    textarea, input {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), #2563eb);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+      font-size: 0.8rem;
+      max-height: 280px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    #hero-preview {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display: none;
+    }
+    .chat-log {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+      height: 240px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .msg-user { color: var(--accent-2); }
+    .msg-tool { color: #fbbf24; font-family: monospace; font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1 id="title-main">AI Product Studio & Live Multimodal Copilot</h1>
+      <p id="title-sub">Powered by Gemini 2.5 Flash • Imagen 3 • Gemini Live API • Cloud Run</p>
+    </div>
+    <button class="lang-toggle" id="lang-btn" onclick="toggleLanguage()">ES / EN</button>
+  </header>
+
+  <main>
+    <!-- 1. Structured Launch Brief Generator -->
+    <section class="card">
+      <h2 id="h-brief">1. Structured Bilingual Launch Kit (Gemini 2.5 Flash)</h2>
+      <textarea id="concept-input" rows="3">AeroBrew Nano: Pocket-sized ultrasonic cold-brew espresso maker for frequent flyers</textarea>
+      <button class="primary" onclick="generateBrief()" id="btn-brief">Generate Structured Launch Kit</button>
+      <pre id="brief-output">Click "Generate Structured Launch Kit" to run Gemini 2.5 Flash with Pydantic JSON Schema...</pre>
+    </section>
+
+    <!-- 2. Imagen 3 Hero Studio -->
+    <section class="card">
+      <h2 id="h-imagen">2. Studio Hero Shot Generator (Imagen 3)</h2>
+      <textarea id="imagen-prompt" rows="3">Minimalist anodized matte black pocket espresso maker on travertine stone counter, dramatic warm rim lighting, 85mm macro lens, photorealistic commercial product photography</textarea>
+      <button class="primary" onclick="generateImage()" id="btn-imagen">Render Studio Hero Image</button>
+      <img id="hero-preview" alt="Generated Imagen 3 Hero Shot" />
+      <pre id="imagen-status">Ready to render 16:9 studio product photography via Imagen 3.</pre>
+    </section>
+
+    <!-- 3. Gemini Live API WebSocket Copilot -->
+    <section class="card">
+      <h2 id="h-live">3. Gemini Live API Copilot + Function Calling (WebSocket)</h2>
+      <div class="chat-log" id="chat-log"></div>
+      <input id="live-input" type="text" value="Calculate unit economics for unit cost $28, retail price $99, and CAC $22." />
+      <button class="primary" onclick="sendLiveMessage()" id="btn-live">Send Live Turn</button>
+    </section>
+  </main>
+
+  <script>
+    let lang = 'en';
+    let ws = null;
+
+    const I18N = {
+      en: {
+        titleMain: 'AI Product Studio & Live Multimodal Copilot',
+        titleSub: 'Powered by Gemini 2.5 Flash • Imagen 3 • Gemini Live API • Cloud Run',
+        hBrief: '1. Structured Bilingual Launch Kit (Gemini 2.5 Flash)',
+        btnBrief: 'Generate Structured Launch Kit',
+        hImagen: '2. Studio Hero Shot Generator (Imagen 3)',
+        btnImagen: 'Render Studio Hero Image',
+        hLive: '3. Gemini Live API Copilot + Function Calling (WebSocket)',
+        btnLive: 'Send Live Turn',
+      },
+      es: {
+        titleMain: 'Estudio de Productos IA y Copiloto Multimodal en Vivo',
+        titleSub: 'Impulsado por Gemini 2.5 Flash • Imagen 3 • Gemini Live API • Cloud Run',
+        hBrief: '1. Kit de Lanzamiento Estructurado Bilingüe (Gemini 2.5 Flash)',
+        btnBrief: 'Generar Kit de Lanzamiento JSON',
+        hImagen: '2. Generador de Fotografía Hero de Estudio (Imagen 3)',
+        btnImagen: 'Renderizar Fotografía con Imagen 3',
+        hLive: '3. Copiloto en Vivo Gemini Live API + Herramientas (WebSocket)',
+        btnLive: 'Enviar Mensaje en Vivo',
+      }
+    };
+
+    function toggleLanguage() {
+      lang = lang === 'en' ? 'es' : 'en';
+      const t = I18N[lang];
+      document.getElementById('title-main').textContent = t.titleMain;
+      document.getElementById('title-sub').textContent = t.titleSub;
+      document.getElementById('h-brief').textContent = t.hBrief;
+      document.getElementById('btn-brief').textContent = t.btnBrief;
+      document.getElementById('h-imagen').textContent = t.hImagen;
+      document.getElementById('btn-imagen').textContent = t.btnImagen;
+      document.getElementById('h-live').textContent = t.hLive;
+      document.getElementById('btn-live').textContent = t.btnLive;
+    }
+
+    async function generateBrief() {
+      const out = document.getElementById('brief-output');
+      out.textContent = 'Generating structured bilingual brief with Gemini 2.5 Flash...';
+      try {
+        const res = await fetch('/api/generate-brief', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ concept: document.getElementById('concept-input').value })
+        });
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+        if (data.imagen_hero_prompt) {
+          document.getElementById('imagen-prompt').value = data.imagen_hero_prompt;
+        }
+      } catch (err) {
+        out.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function generateImage() {
+      const status = document.getElementById('imagen-status');
+      const img = document.getElementById('hero-preview');
+      status.textContent = 'Rendering 16:9 product hero image with Imagen 3...';
+      try {
+        const res = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: document.getElementById('imagen-prompt').value })
+        });
+        const data = await res.json();
+        if (data.image_base64) {
+          img.src = `data:${data.mime_type};base64,${data.image_base64}`;
+          img.style.display = 'block';
+          status.textContent = 'Rendered successfully via imagen-3.0-generate-002.';
+        } else {
+          status.textContent = JSON.stringify(data);
+        }
+      } catch (err) {
+        status.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    function ensureWebSocket() {
+      if (ws && ws.readyState === WebSocket.OPEN) return ws;
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${location.host}/ws/live-copilot`);
+      const log = document.getElementById('chat-log');
+      let currentBotSpan = null;
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'tool_call') {
+          const div = document.createElement('div');
+          div.className = 'msg-tool';
+          div.textContent = `[Tool] ${msg.name}(${JSON.stringify(msg.args)}) -> ${JSON.stringify(msg.result)}`;
+          log.appendChild(div);
+        } else if (msg.type === 'token') {
+          if (!currentBotSpan) {
+            currentBotSpan = document.createElement('div');
+            currentBotSpan.textContent = 'Copilot: ';
+            log.appendChild(currentBotSpan);
+          }
+          currentBotSpan.textContent += msg.text;
+        } else if (msg.type === 'turn_complete') {
+          currentBotSpan = null;
+        }
+        log.scrollTop = log.scrollHeight;
+      };
+      return ws;
+    }
+
+    function sendLiveMessage() {
+      const input = document.getElementById('live-input');
+      const text = input.value.trim();
+      if (!text) return;
+      const log = document.getElementById('chat-log');
+      const div = document.createElement('div');
+      div.className = 'msg-user';
+      div.textContent = `You: ${text}`;
+      log.appendChild(div);
+
+      const socket = ensureWebSocket();
+      const sendPayload = () => socket.send(JSON.stringify({ message: text }));
+      if (socket.readyState === WebSocket.OPEN) {
+        sendPayload();
+      } else {
+        socket.addEventListener('open', sendPayload, { once: true });
+      }
+    }
+  </script>
+</body>
+</html>

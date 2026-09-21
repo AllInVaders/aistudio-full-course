@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Google AI Studio: Zero to Hero Course (EN / ES)</title>
+  <meta name="description" content="Open-source bilingual (English & Spanish) Zero-to-Hero course on Google AI Studio, Gemini Live API, Imagen 3, Veo, Cloud Run, and graduating to Google Antigravity." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">AI STUDIO → ANTIGRAVITY</span>
+      <div>
+        <div class="brand-title" id="brand-title">Google AI Studio: Zero to Hero</div>
+        <div class="brand-subtitle" id="brand-subtitle">From First Prompt to Cloud Run Production &amp; Graduating to Google Antigravity</div>
+      </div>
+    </div>
+
+    <div class="topbar-controls">
+      <div class="lang-switch" role="group" aria-label="Language switcher">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="es">ES</button>
+      </div>
+      <button class="icon-btn" id="theme-toggle" title="Toggle Light/Dark Theme">🌗 Theme</button>
+      <a class="icon-btn" href="https://github.com/AllInVaders/aistudio-full-course" target="_blank" rel="noopener noreferrer">GitHub Repo ↗</a>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="progress-card">
+        <div class="progress-header">
+          <span id="progress-label">Course Progress</span>
+          <span id="progress-pct">0% (0/5)</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="nav-section-label" id="curriculum-header">Curriculum Modules</div>
+      <ul class="module-nav-list" id="module-nav-list"></ul>
+    </aside>
+
+    <main class="content-pane" id="content-pane"></main>
+  </div>
+
+  <script src="./course-data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

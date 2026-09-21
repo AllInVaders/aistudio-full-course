@@ -1,0 +1,50 @@
+name: Deploy AI Product Studio to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'milestone-project/**'
+      - '.github/workflows/deploy-cloudrun.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  SERVICE_NAME: ai-product-studio
+  REGION: us-central1
+
+jobs:
+  deploy:
+    name: Build & Deploy to Google Cloud Run
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: milestone-project
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via Workload Identity Federation
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Deploy from source to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          source: ./milestone-project
+          secrets: GEMINI_API_KEY=GEMINI_API_KEY:latest
+          flags: --session-affinity --allow-unauthenticated
+
+      - name: Print deployed Cloud Run URL
+        run: echo "Deployed live at ${{ steps.deploy.outputs.url }}"
