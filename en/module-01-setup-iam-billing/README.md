@@ -69,7 +69,7 @@ The short answer: **Start in Google AI Studio to iterate at light speed, and use
 | **Target Audience** | Indie hackers, startups, product engineers, rapid prototyping, and production apps that prefer API-key simplicity | Enterprise platform teams requiring strict GCP compliance, VPC perimeters, and MLOps pipelines |
 | **Onboarding Speed** | **Instant (< 30 seconds)** — Sign in with Google and click *Get API Key* | **5–10 minutes** — Requires GCP project, billing account, enabled APIs, and IAM roles |
 | **Authentication** | API Key (`GEMINI_API_KEY`) | IAM Service Accounts, Workload Identity Federation, Application Default Credentials (ADC) |
-| **Free Tier** | **Yes** — Generous free tier for testing Gemini 3.1 Pro, Flash, and Live API | **No recurring free tier** ($300 new-account GCP trial credits apply) |
+| **Free Tier** | **Yes** — Generous free tier for testing Gemini 3.8 Flash, Gemini 3.1 Pro Preview, and the Live API | **No recurring free tier** ($300 new-account GCP trial credits apply) |
 | **Data Privacy (Paid Tier)** | **Prompts & responses are NEVER used to train Google models** | **Prompts & responses are NEVER used to train Google models** (covered by Google Cloud DPA) |
 | **Enterprise Controls** | Project-level API key restrictions, Cloud Billing budgets | VPC Service Controls (VPC-SC), Customer-Managed Encryption Keys (CMEK), Private Service Connect, Data Residency |
 | **Unified SDK Support** | `genai.Client(api_key=...)` | `genai.Client(vertexai=True, project=..., location=...)` |
@@ -107,13 +107,16 @@ Understanding the economic and privacy contract between Free Tier and Paid Tier 
 | :--- | :--- | :--- |
 | **Cost** | $0.00 | Pay-as-you-go per 1M tokens / per image / per second of video |
 | **Rate Limits (RPM / TPM / RPD)** | Lower rate limits designed for individual experimentation | High production throughput (thousands of RPM & millions of TPM, auto-scaling with usage tier) |
-| **Gemini 3.1 Flash Image (Nano Banana 2) & Gemini Omni 1.1 Flash Generation** | Limited or unavailable on unbilled projects | Full access to high-resolution **Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)** and **Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)** video generation |
+| **Nano Banana Image & Gemini Omni Flash Video Generation** | Limited or unavailable on unbilled projects | Full access to high-resolution **Nano Banana** image models (`gemini-3.1-flash-image`, `gemini-3-pro-image`) and **Gemini Omni Flash** (`gemini-omni-1.1-flash`) video generation |
 | **Context Caching & Batch API** | Limited availability | Full access (50% discount on Batch API; up to 75%+ savings on cached context tokens) |
 | **Data Privacy & Model Training** | Google reviewers & systems **may use unpaid prompts/responses** to improve Google products | **STRICT ZERO-TRAINING GUARANTEE:** Your prompts, inputs, and outputs are **NEVER** used to train or improve Google models |
+| **Interaction Retention** (Interactions API) | **1 day**, not configurable | **55 days** by default, configurable to 7, 14, 28, or 55 days in AI Studio |
 
 > [!IMPORTANT]
 > **Golden Rule for Production & Sensitive Data:**
 > Never send customer PII, proprietary company documents, or confidential source code to an unbilled **Free Tier** API key. As soon as you attach a Google Cloud Billing account to your AI Studio project, your traffic is governed by the **Paid Services Terms**, guaranteeing that your data is never used for model training.
+>
+> Separately from training, remember that the Interactions API **stores interactions by default** so they can be chained with `previous_interaction_id`. That storage is what the retention row above describes. In **Module 04** you will learn to set `store=False` on public endpoints to opt out of it entirely.
 
 ---
 
@@ -177,7 +180,7 @@ To prevent unexpected bills during development or traffic spikes:
 Navigate to **[https://aistudio.google.com](https://aistudio.google.com)**. Here is what every section in the left navigation bar does and how pro engineers use it:
 
 1. **Chat / Prompt Playground (`Create Prompt`):**
-   - Test **System Instructions**, switch between **Gemini 3.1 Pro** and **Gemini 3.7 Flash**, upload images/audio/PDFs/videos directly from your drive or desktop, and adjust **Temperature**, **Thinking Budget**, **Safety Settings**, **Structured Output**, **Function Calling**, and **Grounding with Google Search**.
+   - Test **System Instructions**, switch between **Gemini 3.8 Flash** and **Gemini 3.1 Pro Preview**, upload images/audio/PDFs/videos directly from your drive or desktop, and adjust **Temperature**, **Thinking Level**, **Safety Settings**, **Structured Output**, **Function Calling**, and **Grounding with Google Search**.
    - **Pro Tip:** Click the **`Get code` (`<>`)** button in the top right corner of any prompt session to export instant, runnable Python, JavaScript, cURL, or Kotlin snippets using the `google-genai` SDK!
 2. **Stream Realtime (`Live API Playground`):**
    - Test sub-second bidirectional voice, camera, and screen-sharing conversations powered by the Gemini Live API before writing a single line of WebSocket code.
@@ -195,7 +198,7 @@ Navigate to **[https://aistudio.google.com](https://aistudio.google.com)**. Here
 Before we build **Stage 1 of the AI Product Studio** in Module 02, let's build a production-grade diagnostic script in both **Python** and **TypeScript** that:
 1. Verifies your `GEMINI_API_KEY` and `google-genai` SDK installation.
 2. Queries the live Gemini model catalog and inspects token limits (`input_token_limit`, `output_token_limit`).
-3. Performs a low-latency health check against **Gemini 3.7 Flash** and reports exact token accounting (`usage_metadata`).
+3. Performs a low-latency health check against **Gemini 3.8 Flash** using `client.interactions.create` — the exact API surface you will use for the rest of the course.
 
 ### Python Implementation (`lab01_verify_setup.py`)
 
@@ -209,7 +212,6 @@ import os
 import sys
 import time
 from google import genai
-from google.genai import types
 
 
 def run_environment_audit() -> None:
@@ -235,7 +237,14 @@ def run_environment_audit() -> None:
     print(f"{'Model ID':<35} | {'Input Limit':<14} | {'Output Limit':<14}")
     print("-" * 72)
 
-    target_keywords = ("gemini-3.7", "gemini-3.1-flash-image", "veo")
+    target_keywords = (
+        "gemini-3.8-flash",
+        "gemini-3.1-pro-preview",
+        "gemini-3.1-flash-image",
+        "gemini-3-pro-image",
+        "gemini-omni-1.1-flash",
+        "gemini-3.8-live",
+    )
     discovered_count = 0
 
     for model in client.models.list():
@@ -247,33 +256,25 @@ def run_environment_audit() -> None:
             print(f"{name:<35} | {in_limit:<14} | {out_limit:<14}")
 
     print("-" * 72)
-    print(f"✅ Discovered {discovered_count} flagship Gemini 3.7 / 3.1 / Gemini Image / Gemini Omni Video endpoints.")
+    print(f"✅ Discovered {discovered_count} flagship text, Nano Banana, Gemini Omni Flash, and Live endpoints.")
 
-    # 2. Execute a live round-trip smoke test with token telemetry
-    print("\n⚡ Running Live Round-Trip Health Check (gemini-3.7-flash)...")
+    # 2. Execute a live round-trip smoke test through the Interactions API
+    print("\n⚡ Running Live Round-Trip Health Check (gemini-3.8-flash)...")
     start_time = time.perf_counter()
 
-    response = client.models.generate_content(
-        model="gemini-3.7-flash",
-        contents="Confirm readiness for the AI Product Studio course in one crisp sentence.",
-        config=types.GenerateContentConfig(
-            system_instruction="You are the diagnostic kernel for the AI Product Studio platform.",
-            temperature=0.1,
-            max_output_tokens=100,
-        ),
+    interaction = client.interactions.create(
+        model="gemini-3.8-flash",
+        input="Confirm readiness for the AI Product Studio course in one crisp sentence.",
+        system_instruction="You are the diagnostic kernel for the AI Product Studio platform.",
+        generation_config={"thinking_level": "low", "temperature": 0.1},
     )
 
     latency_ms = (time.perf_counter() - start_time) * 1000
-    usage = response.usage_metadata
 
-    print(f"💬 Model Response : {response.text.strip()}")
+    print(f"💬 Model Response : {interaction.output_text.strip()}")
     print(f"⏱️  Round-Trip Time: {latency_ms:.1f} ms")
-    if usage:
-        print(
-            f"📊 Token Telemetry: Prompt={usage.prompt_token_count} | "
-            f"Candidates={usage.candidates_token_count} | "
-            f"Total={usage.total_token_count}"
-        )
+    print(f"🆔 Interaction ID : {interaction.id}")
+    print("📊 Token spend for this call is visible in the AI Studio usage dashboard.")
 
     print("\n🎉 SUCCESS! Your workstation is 100% ready for Module 02.")
     print("=" * 72)
@@ -310,19 +311,17 @@ async function runEnvironmentAudit(): Promise<void> {
   const ai = new GoogleGenAI({ apiKey });
 
   const startTime = performance.now();
-  const response = await ai.models.generateContent({
-    model: "gemini-3.7-flash",
-    contents: "Confirm TypeScript SDK readiness for the AI Product Studio in one sentence.",
-    config: {
-      systemInstruction: "You are the diagnostic kernel for the AI Product Studio platform.",
-      temperature: 0.1,
-    },
+  const interaction = await ai.interactions.create({
+    model: "gemini-3.8-flash",
+    input: "Confirm TypeScript SDK readiness for the AI Product Studio in one sentence.",
+    system_instruction: "You are the diagnostic kernel for the AI Product Studio platform.",
+    generation_config: { thinking_level: "low", temperature: 0.1 },
   });
 
   const latencyMs = (performance.now() - startTime).toFixed(1);
-  console.log(`💬 Model Response : ${response.text?.trim()}`);
+  console.log(`💬 Model Response : ${interaction.output_text?.trim()}`);
   console.log(`⏱️  Round-Trip Time: ${latencyMs} ms`);
-  console.log(`📊 Token Telemetry: Total=${response.usageMetadata?.totalTokenCount ?? "N/A"}`);
+  console.log(`🆔 Interaction ID : ${interaction.id}`);
   console.log("\n🎉 SUCCESS! Your TypeScript environment is ready for Module 02.");
 }
 
@@ -336,7 +335,7 @@ runEnvironmentAudit().catch(console.error);
 In this module, you established the **secure operational backbone** of our **AI Product Studio & Live Multimodal Copilot**:
 - You provisioned the **Google Cloud Project** and **API Key** that will power all text, image, video, and live voice endpoints.
 - You created the least-privilege service account (`aistudio-copilot-sa`) with `roles/aiplatform.user` and `roles/secretmanager.secretAccessor` that our **Module 04 Cloud Run** container will run under.
-- You verified token telemetry (`usage_metadata`), which we will expose directly inside our application's cost-observability header.
+- You measured live round-trip latency and captured your first `interaction.id`—the handle that Module 02 uses to chain stateful, multi-turn creative sessions.
 
 ---
 
@@ -352,7 +351,7 @@ In the **Free Tier** (unbilled project), Google may review and use prompts and r
 </details>
 
 <details>
-<summary><strong>Question 2: Which Python package should you install for all modern Gemini 3.7 / 3.1, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`), and Live API development?</strong></summary>
+<summary><strong>Question 2: Which Python package should you install for all modern Gemini 3.x text, Nano Banana image, Gemini Omni Flash video, and Live API development?</strong></summary>
 
 **Answer:**
 You must install **`google-genai`** (`pip install google-genai`, imported as `from google import genai` and initialized via `client = genai.Client()`). The older `google-generativeai` package is deprecated and should never be used in new projects.
@@ -369,7 +368,7 @@ Grant **only** `roles/secretmanager.secretAccessor` (to read the secret) and `ro
 <summary><strong>Question 4: Does switching from Google AI Studio (Gemini Developer API) to Google Cloud Vertex AI require rewriting your `google-genai` application code?</strong></summary>
 
 **Answer:**
-**No!** Because `google-genai` is a unified SDK, your `client.models.generate_content(...)` calls remain identical. You simply initialize the client with `genai.Client(vertexai=True, project="...", location="...")` instead of `genai.Client(api_key="...")`.
+**No!** Because `google-genai` is a unified SDK, your `client.interactions.create(...)` calls remain identical. You simply initialize the client with `genai.Client(vertexai=True, project="...", location="...")` instead of `genai.Client(api_key="...")`.
 </details>
 
 ---
@@ -378,6 +377,8 @@ Grant **only** `roles/secretmanager.secretAccessor` (to read the secret) and `ro
 
 - **Google AI Studio Dashboard:** [https://aistudio.google.com](https://aistudio.google.com)
 - **Gemini API Quickstart & SDK Setup:** [https://ai.google.dev/gemini-api/docs/quickstart](https://ai.google.dev/gemini-api/docs/quickstart)
+- **Gemini Model Catalog (verify every model ID here):** [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
+- **Interactions API Overview:** [https://ai.google.dev/gemini-api/docs/interactions-overview](https://ai.google.dev/gemini-api/docs/interactions-overview)
 - **Gemini API Pricing & Free vs. Paid Tiers:** [https://ai.google.dev/pricing](https://ai.google.dev/pricing)
 - **Gemini API Rate Limits & Quotas:** [https://ai.google.dev/gemini-api/docs/rate-limits](https://ai.google.dev/gemini-api/docs/rate-limits)
 - **Gemini API Terms of Service & Data Privacy:** [https://ai.google.dev/gemini-api/terms](https://ai.google.dev/gemini-api/terms)

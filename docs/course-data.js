@@ -43,7 +43,7 @@ window.COURSE_DATA = {
           {
             heading: "1. Google AI Studio vs. Vertex AI: When to Use Which",
             body: [
-              "Google AI Studio (aistudio.google.com) is the fastest developer on-ramp to Gemini 3.x, Gemini 3.1 Flash Image (Nano Banana 2), and Gemini Omni 1.1 Flash models. You can generate an API key in seconds and start building immediately with the unified Google Gen AI SDK (`google-genai`).",
+              "Google AI Studio (aistudio.google.com) is the fastest developer on-ramp to the Gemini 3 family: Gemini 3.8 Flash for text and reasoning, Nano Banana for images, and Gemini Omni Flash for video. You can generate an API key in seconds and start building immediately with the unified Google Gen AI SDK (`google-genai`).",
               "Because the `google-genai` SDK uses the exact same code surface for both Google AI Studio API keys and Google Cloud Vertex AI credentials, you never have to rewrite your application code when scaling from prototype to enterprise production."
             ],
             bullets: [
@@ -76,22 +76,32 @@ from google import genai
 # Initialize unified client (automatically reads GEMINI_API_KEY from environment)
 client = genai.Client()
 
+DEFAULT_MODEL = "gemini-3.8-flash"
 prompt = "Explain the difference between RPM, TPM, and RPD in 3 bullet points."
 
 # 1. Pre-flight token count check (crucial for FinOps & quota budgeting)
 token_info = client.models.count_tokens(
-    model="gemini-3.7-flash",
+    model=DEFAULT_MODEL,
     contents=prompt,
 )
 print(f"Input Token Count: {token_info.total_tokens}")
 
-# 2. Generate content and inspect usage metadata
+# 2. Classic / compatible path - easiest way to read usage metadata
 response = client.models.generate_content(
-    model="gemini-3.7-flash",
+    model=DEFAULT_MODEL,
     contents=prompt,
 )
 print(response.text)
-print("Usage Metadata:", response.usage_metadata)`
+print("Usage Metadata:", response.usage_metadata)
+
+# 3. Interactions API - the standard surface used throughout this course.
+#    thinking_level accepts "low", "medium", or "high".
+interaction = client.interactions.create(
+    model=DEFAULT_MODEL,
+    input=prompt,
+    generation_config={"thinking_level": "low"},
+)
+print(interaction.output_text)`
           }
         ],
         quiz: {
@@ -117,39 +127,42 @@ print("Usage Metadata:", response.usage_metadata)`
         tag: "Module 02",
         title: "Basics, Prompts, System Instructions, Media Generation & Language Models",
         eyebrow: "Module 02 · Multimodal & Structured Generation",
-        summary: "Choose between Gemini 3.7 Flash and Gemini 3.1 Pro, control reasoning depth with Thinking Budgets, enforce deterministic JSON schemas with Pydantic, generate images with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) and videos with Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`), and build Stage 1 of the AI Product Studio.",
+        summary: "Choose between Gemini 3.8 Flash and Gemini 3.1 Pro, control reasoning depth with thinking levels, enforce deterministic JSON schemas with Pydantic, generate images with Nano Banana and videos with Gemini Omni Flash, and build Stage 1 of the AI Product Studio on the Interactions API.",
         readTime: "50 min",
         labPath: "labs/module-02-prompts-media/",
-        notebookPath: "notebooks/02_Prompts_Structured_Outputs_Gemini_Image_and_Omni_Video.ipynb",
+        notebookPath: "notebooks/02_Prompts_Structured_Outputs_NanoBanana_and_Omni.ipynb",
         mdPath: "en/module-02-basics-prompts-media-llms/README.md",
         archFlow: [
           { num: "Stage 1A", title: "System Instructions", desc: "Set persistent role, tone, constraints & safety boundaries" },
-          { num: "Stage 1B", title: "Thinking & JSON Schema", desc: "Gemini 3.7 / 3.1 reasoning + Pydantic structured output validation" },
-          { num: "Stage 1C", title: "Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Studio", desc: "Photorealistic hero product renders via client.models.generate_content" },
-          { num: "Stage 1D", title: "Gemini Omni 1.1 Flash Video Engine", desc: "Cinematic product promo clips via client.interactions.create" }
+          { num: "Stage 1B", title: "Thinking Level & JSON Schema", desc: "gemini-3.8-flash reasoning via thinking_level + Pydantic schema in response_format" },
+          { num: "Stage 1C", title: "Nano Banana Studio", desc: "Photorealistic hero renders with gemini-3.1-flash-image via client.interactions.create" },
+          { num: "Stage 1D", title: "Gemini Omni Video Engine", desc: "Cinematic promo clips with gemini-omni-1.1-flash via client.interactions.create" }
         ],
         sections: [
           {
-            heading: "1. Language Models, System Instructions & Thinking Budgets",
+            heading: "1. Language Models, System Instructions & Thinking Levels",
             body: [
-              "Gemini 3.x models (`gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-3.1-pro`) feature built-in reasoning ('Thinking'). You can explicitly tune `thinking_config` to trade latency/cost for deeper analytical reasoning.",
-              "Always separate persistent behavioral instructions (`system_instruction`) from per-request user inputs (`contents`). This improves adherence and strengthens prompt injection defenses."
+              "Gemini 3 models (`gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`) feature built-in reasoning ('Thinking'). You tune it with `generation_config={'thinking_level': ...}`, which accepts `'low'`, `'medium'`, or `'high'` — trading latency and cost for deeper analysis.",
+              "Always separate persistent behavioral instructions (`system_instruction`) from per-request user inputs (`input`). This improves adherence and strengthens prompt injection defenses."
             ],
             bullets: [
-              "<strong>gemini-3.7-flash:</strong> Default workhorse for high-throughput, low-latency multimodal tasks, structured extraction, and real-time agents.",
-              "<strong>gemini-3.1-pro:</strong> Best for complex coding, deep architectural synthesis, and multi-document reasoning.",
-              "<strong>Structured Outputs:</strong> Pass a Pydantic class to `response_schema` with `response_mime_type='application/json'` to guarantee 100% schema-compliant JSON."
+              "<strong>gemini-3.8-flash:</strong> Default workhorse for high-throughput, low-latency multimodal tasks, structured extraction, and real-time agents.",
+              "<strong>gemini-3.1-pro-preview:</strong> Best for complex coding, deep architectural synthesis, and multi-document reasoning.",
+              "<strong>gemini-3.5-flash-lite:</strong> Cheapest tier for high-volume classification and routing.",
+              "<strong>Structured Outputs:</strong> Pass your Pydantic schema through `response_format={'type': 'text', 'mime_type': 'application/json', 'schema': Model.model_json_schema()}` to guarantee 100% schema-compliant JSON.",
+              "<strong>Legacy migration note:</strong> Gemini 3 replaced the numeric `thinking_budget` with `thinking_level`. See the <a href=\"https://ai.google.dev/gemini-api/docs/migrate-to-interactions\">migration guide</a>."
             ]
           },
           {
-            heading: "2. Multimodal Media Generation: Gemini 3.1 Flash Image (Nano Banana 2) & Gemini Omni 1.1 Flash",
+            heading: "2. Multimodal Media Generation: Nano Banana & Gemini Omni Flash",
             body: [
-              "With the unified `google-genai` client, generating high-resolution product images (Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)) and cinematic video clips (Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)) uses the exact same SDK client as text generation."
+              "With the unified `google-genai` client, generating high-resolution product images (Nano Banana) and cinematic video clips (Gemini Omni Flash) uses the exact same `client.interactions.create` call as text generation — only the model and the `response_format` change.",
+              "Media comes back inline as base64 on `interaction.output_image.data` and `interaction.output_video.data`. Chain `previous_interaction_id` to conversationally edit an asset instead of regenerating it. Every generated image carries a <a href=\"https://ai.google.dev/responsible/docs/safeguards/synthid\">SynthID watermark</a>."
             ],
             codeTitle: "labs/module-02-prompts-media/product_studio_stage1.py",
-            code: `from pydantic import BaseModel, Field
+            code: `import base64
+from pydantic import BaseModel, Field
 from google import genai
-from google.genai import types
 
 client = genai.Client()
 
@@ -158,31 +171,53 @@ class ProductLaunchKit(BaseModel):
     tagline: str
     target_audience: str
     key_features: list[str]
-    image_prompt: str = Field(description="Detailed visual prompt for Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)")
-    omni_video_prompt: str = Field(description="Cinematic motion prompt for Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)")
+    hero_image_prompt: str = Field(description="Detailed studio photography prompt: lighting, lens, materials")
+    promo_video_prompt: str = Field(description="Cinematic motion prompt: camera movement, subject action, lighting")
 
-# 1. Generate Structured Product Brief with System Instructions & Thinking
-brief_resp = client.models.generate_content(
-    model="gemini-3.7-flash",
-    contents="Create a launch kit for a solar-powered smart espresso mug.",
-    config=types.GenerateContentConfig(
-        system_instruction="You are an expert industrial designer and brand director.",
-        response_mime_type="application/json",
-        response_schema=ProductLaunchKit,
-        thinking_config=types.ThinkingConfig(thinking_budget=1024),
-    ),
+# 1. Structured product brief: thinking_level + JSON schema
+brief = client.interactions.create(
+    model="gemini-3.8-flash",
+    input="Create a launch kit for a solar-powered smart espresso mug.",
+    system_instruction="You are an expert industrial designer and brand director.",
+    response_format={
+        "type": "text",
+        "mime_type": "application/json",
+        "schema": ProductLaunchKit.model_json_schema(),
+    },
+    generation_config={"thinking_level": "medium"},
 )
-kit = ProductLaunchKit.model_validate_json(brief_resp.text)
+kit = ProductLaunchKit.model_validate_json(brief.output_text)
 print("Generated Launch Kit:", kit.model_dump_json(indent=2))
 
-# 2. Generate Product Hero Image with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)
-img_resp = client.models.generate_content(
+# 2. Hero image with Nano Banana ("gemini-3-pro-image" for 4K / precise text)
+image = client.interactions.create(
     model="gemini-3.1-flash-image",
-    contents=kit.image_prompt,
-    config=types.GenerateContentConfig(
-        response_modalities=["IMAGE"],
-        image_config=types.ImageConfig(aspect_ratio="16:9"),
-    ),
+    input=kit.hero_image_prompt,
+    response_format={
+        "type": "image",
+        "mime_type": "image/png",
+        "aspect_ratio": "16:9",
+        "image_size": "2K",
+    },
+)
+with open("hero.png", "wb") as f:
+    f.write(base64.b64decode(image.output_image.data))
+
+# 3. Promo video with Gemini Omni Flash (returned inline, nothing to poll)
+video = client.interactions.create(
+    model="gemini-omni-1.1-flash",
+    input=kit.promo_video_prompt,
+    response_format={"type": "video", "aspect_ratio": "16:9"},
+)
+with open("promo.mp4", "wb") as f:
+    f.write(base64.b64decode(video.output_video.data))
+
+# 4. Conversational edit: keep the shot, change one thing
+edit = client.interactions.create(
+    model="gemini-3.1-flash-image",
+    input="Swap the background for brushed concrete and warm the key light.",
+    previous_interaction_id=image.id,
+    response_format={"type": "image", "mime_type": "image/png", "aspect_ratio": "16:9"},
 )`
           }
         ],
@@ -190,18 +225,19 @@ img_resp = client.models.generate_content(
           question: "How do you guarantee that Gemini returns valid JSON matching your exact application data structure?",
           options: [
             "Write 'PLEASE ONLY RETURN JSON' in all caps inside the user prompt.",
-            "Set response_mime_type='application/json' and pass a Pydantic model or JSON Schema to response_schema in GenerateContentConfig.",
+            "Pass response_format={'type': 'text', 'mime_type': 'application/json', 'schema': YourModel.model_json_schema()} to client.interactions.create.",
             "Use temperature=2.0 so the model explores more formatting styles.",
-            "JSON output is only supported in Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)."
+            "JSON output is only supported by the image models."
           ],
           correctIndex: 1,
-          explanation: "Correct! Setting `response_mime_type='application/json'` together with `response_schema=YourPydanticModel` enforces constrained decoding so the output always conforms to your schema."
+          explanation: "Correct! Passing your Pydantic schema through `response_format` on `client.interactions.create` enforces constrained decoding, so `interaction.output_text` always conforms to your schema."
         },
         references: [
           { title: "Structured Outputs Guide", desc: "Enforcing JSON schemas and Pydantic models in Gemini API", url: "https://ai.google.dev/gemini-api/docs/structured-output" },
-          { title: "Gemini Thinking Models Guide", desc: "Configuring thinking budgets and reasoning tokens", url: "https://ai.google.dev/gemini-api/docs/thinking" },
-          { title: "Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Image Generation", desc: "Generating and customizing images with google-genai", url: "https://ai.google.dev/gemini-api/docs/image-generation" },
-          { title: "Gemini Omni 1.1 Flash Video Generation Guide", desc: "Generating high-definition video clips from text and images", url: "https://ai.google.dev/gemini-api/docs/video" }
+          { title: "Gemini Thinking Models Guide", desc: "Configuring thinking_level and reasoning tokens", url: "https://ai.google.dev/gemini-api/docs/thinking" },
+          { title: "Image Generation with Nano Banana", desc: "Generating and conversationally editing images with gemini-3.1-flash-image", url: "https://ai.google.dev/gemini-api/docs/image-generation" },
+          { title: "Video Generation with Gemini Omni Flash", desc: "Generating and editing video clips with gemini-omni-1.1-flash", url: "https://ai.google.dev/gemini-api/docs/omni" },
+          { title: "Interactions API Overview", desc: "The current standard surface for text, image, and video generation", url: "https://ai.google.dev/gemini-api/docs/interactions-overview" }
         ]
       },
       {
@@ -252,10 +288,11 @@ async def run_live_copilot_session():
         system_instruction="You are the Live Product Studio Copilot. Use tools whenever pricing is discussed.",
         tools=[calculate_unit_economics],
     )
+    # Audio input must be raw 16-bit PCM, 16 kHz, little-endian, mono.
+    # For background reasoning during live voice, use "gemini-3.8-live-extended-thinking".
     async with client.aio.live.connect(model="gemini-3.8-live", config=config) as session:
-        await session.send(
-            input="If our solar mug costs $18 to manufacture and sells for $65 across 5,000 units, what is our margin?",
-            end_of_turn=True,
+        await session.send_realtime_input(
+            text="If our solar mug costs $18 to manufacture and sells for $65 across 5,000 units, what is our margin?",
         )
         async for message in session.receive():
             if message.text:
@@ -384,7 +421,7 @@ jobs:
           {
             heading: "1. The Graduation Paradigm Shift: From API Caller to Agent Orchestrator",
             body: [
-              "In Modules 1–4, you learned how to embed Gemini, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`), and the Live API inside your application code. In the Surprise Finisher, you flip the perspective: you graduate to Google Antigravity (antigravity.google), where autonomous AI agents pair-program with you across your entire repository, terminal, browser, and cloud infrastructure.",
+              "In Modules 1–4, you learned how to embed Gemini 3.8 Flash, Nano Banana, Gemini Omni Flash, and the Live API inside your application code. In the Surprise Finisher, you flip the perspective: you graduate to Google Antigravity (antigravity.google), where autonomous AI agents pair-program with you across your entire repository, terminal, browser, and cloud infrastructure.",
               "Because Antigravity connects directly to your Google AI Studio API keys and Google Cloud projects, everything you configured in Modules 1–4 carries over immediately."
             ],
             bullets: [
@@ -407,8 +444,17 @@ description: Run automated health checks, schema verification, and Cloud Run dep
 
 # AI Product Studio Operations Skill
 
-1. **Pre-Flight Check**: Verify that all endpoints use the unified \`google-genai\` SDK and that no secrets are hardcoded.
-2. **Smoke Test**: Run \`pytest\` and verify \`/api/health\` returns HTTP 200.
+## Enforced model standard
+- Text / structured output: \`gemini-3.8-flash\`
+- Images: \`gemini-3.1-flash-image\` (Nano Banana 2), \`gemini-3-pro-image\` (Nano Banana Pro)
+- Video: \`gemini-omni-1.1-flash\` (Gemini Omni Flash)
+- Live copilot: \`gemini-3.8-live\`
+
+Every generative call goes through \`client.interactions.create\`. Reasoning depth is
+\`generation_config={"thinking_level": ...}\`.
+
+1. **Pre-Flight Check**: Verify that all endpoints use the unified \`google-genai\` SDK, that no secrets are hardcoded, and that \`/api/health\` reports the model IDs above.
+2. **Smoke Test**: Exercise \`/api/generate-brief\`, \`/api/generate-image\`, and \`/api/generate-video\`, then verify \`/api/health\` returns HTTP 200.
 3. **Deploy**: Execute \`./deploy-cloudrun.sh\` to deploy with Secret Manager bindings.`
           }
         ],
@@ -475,7 +521,7 @@ description: Run automated health checks, schema verification, and Cloud Run dep
           {
             heading: "1. Google AI Studio vs. Vertex AI: Cuándo Usar Cada Uno",
             body: [
-              "Google AI Studio (aistudio.google.com) es la vía más rápida para que desarrolladores construyan con modelos Gemini 3.x, Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash. Puedes generar una API Key en segundos y programar de inmediato con el SDK oficial unificado (`google-genai`).",
+              "Google AI Studio (aistudio.google.com) es la vía más rápida para construir con la familia Gemini 3: Gemini 3.8 Flash para texto y razonamiento, Nano Banana para imágenes y Gemini Omni Flash para video. Puedes generar una API Key en segundos y programar de inmediato con el SDK oficial unificado (`google-genai`).",
               "Dado que el SDK `google-genai` utiliza exactamente la misma interfaz de código tanto para API Keys de Google AI Studio como para credenciales empresariales de Vertex AI, nunca tendrás que reescribir tu aplicación al escalar a producción."
             ],
             bullets: [
@@ -508,22 +554,32 @@ from google import genai
 # Inicializa el cliente unificado (lee GEMINI_API_KEY automáticamente del entorno)
 client = genai.Client()
 
+DEFAULT_MODEL = "gemini-3.8-flash"
 prompt = "Explica la diferencia entre RPM, TPM y RPD en 3 viñetas claras."
 
 # 1. Conteo previo de tokens (esencial para FinOps y control de cuotas)
 token_info = client.models.count_tokens(
-    model="gemini-3.7-flash",
+    model=DEFAULT_MODEL,
     contents=prompt,
 )
 print(f"Tokens de entrada: {token_info.total_tokens}")
 
-# 2. Generación de contenido e inspección de metadatos de uso
+# 2. Ruta clásica / compatible: la forma más simple de leer metadatos de uso
 response = client.models.generate_content(
-    model="gemini-3.7-flash",
+    model=DEFAULT_MODEL,
     contents=prompt,
 )
 print(response.text)
-print("Metadatos de uso:", response.usage_metadata)`
+print("Metadatos de uso:", response.usage_metadata)
+
+# 3. Interactions API: la superficie estándar que usaremos en todo el curso.
+#    thinking_level acepta "low", "medium" o "high".
+interaction = client.interactions.create(
+    model=DEFAULT_MODEL,
+    input=prompt,
+    generation_config={"thinking_level": "low"},
+)
+print(interaction.output_text)`
           }
         ],
         quiz: {
@@ -549,39 +605,42 @@ print("Metadatos de uso:", response.usage_metadata)`
         tag: "Módulo 02",
         title: "Fundamentos, Prompts, Instrucciones del Sistema, Generación Multimedia y LLMs",
         eyebrow: "Módulo 02 · Generación Multimodal y Salidas Estructuradas",
-        summary: "Elige entre Gemini 3.7 Flash y Gemini 3.1 Pro, controla la profundidad de razonamiento con Thinking Budgets, garantiza esquemas JSON deterministas con Pydantic, genera imágenes con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) y videos con Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`), y construye la Etapa 1 del Proyecto Hito.",
+        summary: "Elige entre Gemini 3.8 Flash y Gemini 3.1 Pro, controla la profundidad de razonamiento con niveles de thinking, garantiza esquemas JSON deterministas con Pydantic, genera imágenes con Nano Banana y videos con Gemini Omni Flash, y construye la Etapa 1 del Proyecto Hito sobre la Interactions API.",
         readTime: "50 min",
         labPath: "labs/module-02-prompts-media/",
-        notebookPath: "notebooks/02_Prompts_Structured_Outputs_Gemini_Image_and_Omni_Video.ipynb",
+        notebookPath: "notebooks/02_Prompts_Structured_Outputs_NanoBanana_and_Omni.ipynb",
         mdPath: "es/module-02-basics-prompts-media-llms/README.md",
         archFlow: [
           { num: "Etapa 1A", title: "System Instructions", desc: "Define rol persistente, tono, reglas y límites de seguridad" },
-          { num: "Etapa 1B", title: "Thinking y Esquema JSON", desc: "Razonamiento Gemini 3.7 / 3.1 + validación estricta con Pydantic" },
-          { num: "Etapa 1C", title: "Estudio Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)", desc: "Renders fotorrealistas de producto vía client.models.generate_content" },
-          { num: "Etapa 1D", title: "Motor de Video Gemini Omni 1.1 Flash", desc: "Clips promocionales cinematográficos vía client.interactions.create" }
+          { num: "Etapa 1B", title: "Nivel de Thinking y Esquema JSON", desc: "Razonamiento de gemini-3.8-flash con thinking_level + esquema Pydantic en response_format" },
+          { num: "Etapa 1C", title: "Estudio Nano Banana", desc: "Renders fotorrealistas con gemini-3.1-flash-image vía client.interactions.create" },
+          { num: "Etapa 1D", title: "Motor de Video Gemini Omni", desc: "Clips promocionales cinematográficos con gemini-omni-1.1-flash vía client.interactions.create" }
         ],
         sections: [
           {
-            heading: "1. Modelos de Lenguaje, System Instructions y Presupuesto de Razonamiento",
+            heading: "1. Modelos de Lenguaje, System Instructions y Niveles de Razonamiento",
             body: [
-              "Los modelos Gemini 3.x (`gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-3.1-pro`) incorporan razonamiento nativo ('Thinking'). Puedes ajustar `thinking_config` para equilibrar latencia/costo frente a profundidad analítica.",
-              "Separa siempre las instrucciones de comportamiento (`system_instruction`) de los datos del usuario (`contents`). Esto eleva la precisión y protege contra inyecciones de prompt."
+              "Los modelos Gemini 3 (`gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`) incorporan razonamiento nativo ('Thinking'). Lo ajustas con `generation_config={'thinking_level': ...}`, que acepta `'low'`, `'medium'` o `'high'`, equilibrando latencia y costo frente a profundidad analítica.",
+              "Separa siempre las instrucciones de comportamiento (`system_instruction`) de los datos del usuario (`input`). Esto eleva la precisión y protege contra inyecciones de prompt."
             ],
             bullets: [
-              "<strong>gemini-3.7-flash:</strong> Modelo principal de baja latencia y alta eficiencia para tareas multimodales, extracción estructurada y agentes en tiempo real.",
-              "<strong>gemini-3.1-pro:</strong> Ideal para programación compleja, diseño arquitectónico y análisis profundo.",
-              "<strong>Salidas Estructuradas:</strong> Pasa una clase Pydantic a `response_schema` con `response_mime_type='application/json'` para garantizar JSON 100% válido."
+              "<strong>gemini-3.8-flash:</strong> Modelo principal de baja latencia y alta eficiencia para tareas multimodales, extracción estructurada y agentes en tiempo real.",
+              "<strong>gemini-3.1-pro-preview:</strong> Ideal para programación compleja, diseño arquitectónico y análisis profundo.",
+              "<strong>gemini-3.5-flash-lite:</strong> El nivel más económico para clasificación y enrutamiento de alto volumen.",
+              "<strong>Salidas Estructuradas:</strong> Pasa tu esquema Pydantic mediante `response_format={'type': 'text', 'mime_type': 'application/json', 'schema': Modelo.model_json_schema()}` para garantizar JSON 100% válido.",
+              "<strong>Nota de migración heredada:</strong> Gemini 3 reemplazó el `thinking_budget` numérico por `thinking_level`. Consulta la <a href=\"https://ai.google.dev/gemini-api/docs/migrate-to-interactions\">guía de migración</a>."
             ]
           },
           {
-            heading: "2. Generación Multimedia con Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash",
+            heading: "2. Generación Multimedia con Nano Banana y Gemini Omni Flash",
             body: [
-              "Con el cliente unificado `google-genai`, generar imágenes de alta resolución (Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)) y clips de video (Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)) utiliza exactamente el mismo cliente que el texto."
+              "Con el cliente unificado `google-genai`, generar imágenes de alta resolución (Nano Banana) y clips de video (Gemini Omni Flash) usa exactamente la misma llamada `client.interactions.create` que el texto: solo cambian el modelo y el `response_format`.",
+              "El contenido vuelve en línea como base64 en `interaction.output_image.data` y `interaction.output_video.data`. Encadena `previous_interaction_id` para editar un recurso de forma conversacional en lugar de regenerarlo. Toda imagen generada lleva una <a href=\"https://ai.google.dev/responsible/docs/safeguards/synthid\">marca de agua SynthID</a>."
             ],
             codeTitle: "labs/module-02-prompts-media/product_studio_stage1.py",
-            code: `from pydantic import BaseModel, Field
+            code: `import base64
+from pydantic import BaseModel, Field
 from google import genai
-from google.genai import types
 
 client = genai.Client()
 
@@ -590,31 +649,53 @@ class ProductLaunchKit(BaseModel):
     tagline: str
     target_audience: str
     key_features: list[str]
-    image_prompt: str = Field(description="Prompt visual detallado para Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)")
-    omni_video_prompt: str = Field(description="Prompt cinematográfico para Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)")
+    hero_image_prompt: str = Field(description="Prompt detallado de fotografía de estudio: iluminación, lente, materiales")
+    promo_video_prompt: str = Field(description="Prompt cinematográfico: movimiento de cámara, acción, iluminación")
 
-# 1. Generar Brief de Producto Estructurado con System Instructions y Thinking
-brief_resp = client.models.generate_content(
-    model="gemini-3.7-flash",
-    contents="Crea un kit de lanzamiento para una taza inteligente de espresso solar.",
-    config=types.GenerateContentConfig(
-        system_instruction="Eres un director creativo y diseñador industrial experto.",
-        response_mime_type="application/json",
-        response_schema=ProductLaunchKit,
-        thinking_config=types.ThinkingConfig(thinking_budget=1024),
-    ),
+# 1. Brief estructurado: thinking_level + esquema JSON
+brief = client.interactions.create(
+    model="gemini-3.8-flash",
+    input="Crea un kit de lanzamiento para una taza inteligente de espresso solar.",
+    system_instruction="Eres un director creativo y diseñador industrial experto.",
+    response_format={
+        "type": "text",
+        "mime_type": "application/json",
+        "schema": ProductLaunchKit.model_json_schema(),
+    },
+    generation_config={"thinking_level": "medium"},
 )
-kit = ProductLaunchKit.model_validate_json(brief_resp.text)
+kit = ProductLaunchKit.model_validate_json(brief.output_text)
 print("Kit de Lanzamiento Generado:", kit.model_dump_json(indent=2))
 
-# 2. Generar Imagen Principal del Producto con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)
-img_resp = client.models.generate_content(
+# 2. Imagen hero con Nano Banana ("gemini-3-pro-image" para 4K / texto preciso)
+image = client.interactions.create(
     model="gemini-3.1-flash-image",
-    contents=kit.image_prompt,
-    config=types.GenerateContentConfig(
-        response_modalities=["IMAGE"],
-        image_config=types.ImageConfig(aspect_ratio="16:9"),
-    ),
+    input=kit.hero_image_prompt,
+    response_format={
+        "type": "image",
+        "mime_type": "image/png",
+        "aspect_ratio": "16:9",
+        "image_size": "2K",
+    },
+)
+with open("hero.png", "wb") as f:
+    f.write(base64.b64decode(image.output_image.data))
+
+# 3. Video promocional con Gemini Omni Flash (llega en línea, sin polling)
+video = client.interactions.create(
+    model="gemini-omni-1.1-flash",
+    input=kit.promo_video_prompt,
+    response_format={"type": "video", "aspect_ratio": "16:9"},
+)
+with open("promo.mp4", "wb") as f:
+    f.write(base64.b64decode(video.output_video.data))
+
+# 4. Edición conversacional: conserva la toma y cambia un solo detalle
+edit = client.interactions.create(
+    model="gemini-3.1-flash-image",
+    input="Cambia el fondo a concreto pulido y calienta la luz principal.",
+    previous_interaction_id=image.id,
+    response_format={"type": "image", "mime_type": "image/png", "aspect_ratio": "16:9"},
 )`
           }
         ],
@@ -622,18 +703,19 @@ img_resp = client.models.generate_content(
           question: "¿Cómo garantizas que Gemini devuelva siempre un JSON válido que cumpla exactamente con la estructura de datos de tu aplicación?",
           options: [
             "Escribiendo 'DEVUELVE SOLO JSON' en mayúsculas en el prompt.",
-            "Configurando response_mime_type='application/json' y pasando un modelo Pydantic o JSON Schema en response_schema dentro de GenerateContentConfig.",
+            "Pasando response_format={'type': 'text', 'mime_type': 'application/json', 'schema': TuModelo.model_json_schema()} a client.interactions.create.",
             "Subiendo temperature=2.0.",
-            "Solo Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) soporta JSON."
+            "Solo los modelos de imagen soportan JSON."
           ],
           correctIndex: 1,
-          explanation: "¡Exacto! Usar `response_mime_type='application/json'` junto con `response_schema=TuModeloPydantic` activa la decodificación restringida para que la salida siempre respete tu esquema."
+          explanation: "¡Exacto! Pasar tu esquema Pydantic mediante `response_format` en `client.interactions.create` activa la decodificación restringida, de modo que `interaction.output_text` siempre respeta tu esquema."
         },
         references: [
           { title: "Guía de Salidas Estructuradas (JSON)", desc: "Uso de esquemas JSON y modelos Pydantic en Gemini API", url: "https://ai.google.dev/gemini-api/docs/structured-output" },
-          { title: "Modelos de Razonamiento (Thinking)", desc: "Configuración de thinking_budget y tokens de razonamiento", url: "https://ai.google.dev/gemini-api/docs/thinking" },
-          { title: "Generación de Imágenes con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)", desc: "Guía oficial de Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) con el SDK google-genai", url: "https://ai.google.dev/gemini-api/docs/image-generation" },
-          { title: "Generación de Video con Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)", desc: "Creación de videos de alta definición desde texto e imágenes", url: "https://ai.google.dev/gemini-api/docs/video" }
+          { title: "Modelos de Razonamiento (Thinking)", desc: "Configuración de thinking_level y tokens de razonamiento", url: "https://ai.google.dev/gemini-api/docs/thinking" },
+          { title: "Generación de Imágenes con Nano Banana", desc: "Generación y edición conversacional de imágenes con gemini-3.1-flash-image", url: "https://ai.google.dev/gemini-api/docs/image-generation" },
+          { title: "Generación de Video con Gemini Omni Flash", desc: "Generación y edición de clips de video con gemini-omni-1.1-flash", url: "https://ai.google.dev/gemini-api/docs/omni" },
+          { title: "Resumen de la Interactions API", desc: "La superficie estándar actual para texto, imagen y video", url: "https://ai.google.dev/gemini-api/docs/interactions-overview" }
         ]
       },
       {
@@ -684,10 +766,11 @@ async def run_live_copilot_session():
         system_instruction="Eres el Copiloto en Vivo de Product Studio. Usa herramientas para cálculos financieros.",
         tools=[calculate_unit_economics],
     )
+    # El audio de entrada debe ser PCM de 16 bits, 16 kHz, little-endian, mono.
+    # Para razonamiento en segundo plano durante voz en vivo: "gemini-3.8-live-extended-thinking".
     async with client.aio.live.connect(model="gemini-3.8-live", config=config) as session:
-        await session.send(
-            input="Si nuestra taza solar cuesta $18 de fabricar y se vende a $65 para 5,000 unidades, ¿cuál es el margen?",
-            end_of_turn=True,
+        await session.send_realtime_input(
+            text="Si nuestra taza solar cuesta $18 de fabricar y se vende a $65 para 5,000 unidades, ¿cuál es el margen?",
         )
         async for message in session.receive():
             if message.text:

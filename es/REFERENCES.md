@@ -22,19 +22,35 @@ Todos los enlaces contenidos en este directorio apuntan exclusivamente a documen
 - **SDK Oficial de Google Gen AI para Python (`google-genai`)**: [https://github.com/googleapis/python-genai](https://github.com/googleapis/python-genai)
 - **SDK Oficial de Google Gen AI para TypeScript y JavaScript (`@google/genai`)**: [https://github.com/googleapis/js-genai](https://github.com/googleapis/js-genai)
 - **Guía Oficial de Bibliotecas y SDKs de Gemini API**: [https://ai.google.dev/gemini-api/docs/libraries](https://ai.google.dev/gemini-api/docs/libraries)
-- **Guía de Migración desde el SDK Heredado al SDK Unificado**: [https://ai.google.dev/gemini-api/docs/migrate](https://ai.google.dev/gemini-api/docs/migrate)
+- **Guía Oficial de Migración a la Interactions API**: [https://ai.google.dev/gemini-api/docs/migrate-to-interactions](https://ai.google.dev/gemini-api/docs/migrate-to-interactions)
 
 ---
 
-## 3. Modelos Gemini, Razonamiento y Capacidades Multimodales
+## 3. Modelos Gemini, Interactions API, Razonamiento y Capacidades Multimodales
 
-- **Catálogo Oficial de Modelos Gemini (Gemini 3.1 Pro, Flash y Live)**: [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
-- **Razonamiento Híbrido y Presupuesto de Pensamiento (`thinking_config`)**: [https://ai.google.dev/gemini-api/docs/thinking](https://ai.google.dev/gemini-api/docs/thinking)
-- **Salidas Estructuradas (Structured Outputs con JSON Schema y Pydantic)**: [https://ai.google.dev/gemini-api/docs/structured-output](https://ai.google.dev/gemini-api/docs/structured-output)
+### Superficie de API
+
+- **Interactions API — Visión General (superficie estándar, estado en servidor)**: [https://ai.google.dev/gemini-api/docs/interactions-overview](https://ai.google.dev/gemini-api/docs/interactions-overview)
+- **Guía Oficial de Migración a la Interactions API**: [https://ai.google.dev/gemini-api/docs/migrate-to-interactions](https://ai.google.dev/gemini-api/docs/migrate-to-interactions)
+
+### Modelos y Razonamiento
+
+- **Catálogo Oficial de Modelos Gemini (`gemini-3.8-flash`, `gemini-3.1-pro-preview`, Live, Nano Banana, Omni)**: [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
+- **Razonamiento y Nivel de Pensamiento (`thinking_level`: `low` / `medium` / `high`)**: [https://ai.google.dev/gemini-api/docs/thinking](https://ai.google.dev/gemini-api/docs/thinking)
+- **Salidas Estructuradas (`response_format` con JSON Schema y Pydantic)**: [https://ai.google.dev/gemini-api/docs/structured-output](https://ai.google.dev/gemini-api/docs/structured-output)
 - **Llamada a Funciones y Herramientas (Function Calling / Tool Use)**: [https://ai.google.dev/gemini-api/docs/function-calling](https://ai.google.dev/gemini-api/docs/function-calling)
-- **Gemini Live API (Streaming Bidireccional WebSocket de Audio y Video)**: [https://ai.google.dev/gemini-api/docs/live](https://ai.google.dev/gemini-api/docs/live)
-- **Generación de Imágenes con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) (`generate_images`)**: [https://ai.google.dev/gemini-api/docs/image-generation](https://ai.google.dev/gemini-api/docs/image-generation)
-- **Generación de Video con Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (`generate_videos`)**: [https://ai.google.dev/gemini-api/docs/video](https://ai.google.dev/gemini-api/docs/video)
+
+### Tiempo Real (Live API)
+
+- **Live API — Visión General (`gemini-3.8-live`)**: [https://ai.google.dev/gemini-api/docs/live-api](https://ai.google.dev/gemini-api/docs/live-api)
+- **Live API — Inicio Rápido con el SDK**: [https://ai.google.dev/gemini-api/docs/live-api/get-started-sdk](https://ai.google.dev/gemini-api/docs/live-api/get-started-sdk)
+- **Live API — Uso de Herramientas**: [https://ai.google.dev/gemini-api/docs/live-api/tools](https://ai.google.dev/gemini-api/docs/live-api/tools)
+
+### Generación Multimedia
+
+- **Generación y Edición de Imágenes con Nano Banana (`gemini-3.1-flash-image`, `gemini-3-pro-image`, `gemini-3.1-flash-lite-image`)**: [https://ai.google.dev/gemini-api/docs/image-generation](https://ai.google.dev/gemini-api/docs/image-generation)
+- **Generación y Edición de Video con Gemini Omni Flash (`gemini-omni-1.1-flash`)**: [https://ai.google.dev/gemini-api/docs/omni](https://ai.google.dev/gemini-api/docs/omni)
+- **Marca de Agua SynthID en Contenido Generado**: [https://ai.google.dev/responsible/docs/safeguards/synthid](https://ai.google.dev/responsible/docs/safeguards/synthid)
 
 ---
 

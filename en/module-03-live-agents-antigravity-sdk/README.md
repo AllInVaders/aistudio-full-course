@@ -3,7 +3,7 @@
 > **Navigation:** [← Module 02: Basics, Prompts & Media Gen](../module-02-basics-prompts-media-llms/README.md) | [Course Home (`../README.md`)](../README.md) | **Next:** [Module 04: Deployment, GitHub, Cloud Run & Security →](../module-04-deploy-github-cloudrun-security/README.md)
 
 Welcome to **Module 03**—where your applications come alive! Traditional request/response LLM APIs force users to type a prompt, wait for text tokens, and manually copy results into other tools. In this module, we shatter those boundaries by combining three transformative capabilities:
-1. **The Gemini Live API (`client.aio.live.connect`)**: Low-latency, full-duplex bidirectional streaming of **raw PCM audio, live video frames, and text over WebSockets** with native **Voice Activity Detection (VAD) and barge-in interruption handling**.
+1. **Gemini 3.8 Live (`client.aio.live.connect`)**: Low-latency, full-duplex bidirectional streaming of **raw 16-bit PCM audio at 16 kHz (little-endian), live video frames, and text over WebSockets** with native **Voice Activity Detection (VAD) and barge-in interruption handling**.
 2. **Autonomous Function Calling & Tool-Use Loops**: Equipping Gemini models with real Python/TypeScript tools so they can query pricing databases, inspect inventory, and trigger our **Stage 1 Creative Engine** mid-conversation.
 3. **The Google Antigravity SDK & Harness (`https://antigravity.google`)**: Understanding how Google's agent-first development platform and SDK orchestrate multi-step planning, workspace tools, and autonomous software agents.
 
@@ -12,8 +12,8 @@ Welcome to **Module 03**—where your applications come alive! Traditional reque
 ## 🎯 Learning Objectives
 
 By the end of this module, you will be able to:
-1. Establish persistent, asynchronous WebSocket sessions with the **Gemini Live API** (`client.aio.live.connect`) in Python and TypeScript.
-2. Stream real-time **16kHz PCM audio input**, receive **24kHz native voice output**, send live camera/screen JPEG frames, and handle **barge-in interruptions** (`server_content.interrupted`).
+1. Establish persistent, asynchronous WebSocket sessions with **Gemini 3.8 Live** (`client.aio.live.connect`) in Python and TypeScript, and know when to reach for `gemini-3.8-live-extended-thinking` instead.
+2. Stream real-time **16-bit PCM audio at 16 kHz (little-endian)** with `session.send_realtime_input(...)`, receive native voice output, send live camera/screen JPEG frames, and handle **barge-in interruptions** (`server_content.interrupted`).
 3. Architect deterministic and autonomous **Tool / Function Calling Loops** using automatic Python function declarations and manual tool response dispatch.
 4. Explain the architecture of **Google Antigravity** (`https://antigravity.google`) and integrate the **Antigravity SDK** patterns into agentic workflows.
 5. Build **Stage 2 of the Flagship Milestone Project**: the **Live Multimodal Product Copilot & Autonomous Tool Agent**.
@@ -26,10 +26,10 @@ By the end of this module, you will be able to:
 sequenceDiagram
     participant User as 🎙️ User (Mic + Camera + Screen)
     participant App as ⚡ Async Copilot Session (Python / TS)
-    participant LiveAPI as 🧠 Gemini Live API (WSS Full-Duplex)
-    participant Tools as 🛠️ Product Studio Tools (Pricing, Specs, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2))
+    participant LiveAPI as 🧠 Gemini 3.8 Live (WSS Full-Duplex)
+    participant Tools as 🛠️ Product Studio Tools (Pricing, Specs, Nano Banana)
 
-    User->>App: Streams 16kHz PCM Audio & 1 FPS JPEG Frames
+    User->>App: Streams 16-bit 16 kHz PCM Audio & 1 FPS JPEG Frames
     App->>LiveAPI: session.send_realtime_input(audio=..., video=...)
     Note over LiveAPI: Native Multimodal VAD & Reasoning
     LiveAPI-->>App: server_content.model_turn (24kHz PCM Audio Stream)
@@ -48,12 +48,39 @@ sequenceDiagram
 
 ---
 
-## 1. Deep Conceptual Walkthrough: The Gemini Live API (`client.aio.live.connect`)
+## 1. Deep Conceptual Walkthrough: Gemini 3.8 Live (`client.aio.live.connect`)
 
-Unlike standard HTTP streaming (`generate_content_stream`), the **Gemini Live API** maintains a stateful, bidirectional WebSocket connection where:
-- **Multimodal Inputs Flow Continuously:** You can stream microphone audio chunks (`audio/pcm;rate=16000`), webcam or screen-share frames (`image/jpeg`), and text messages simultaneously.
+### Which Live model should you pick?
+
+| Model ID | Friendly name | Pick it when |
+| :--- | :--- | :--- |
+| `gemini-3.8-live` | Gemini 3.8 Live | **Your default** for real-time voice and video agents. |
+| `gemini-3.8-live-extended-thinking` | Gemini 3.8 Live Extended Thinking | The agent needs to reason deeply in the background while still holding a natural live conversation. |
+| `gemini-3.5-live-translate-preview` | Gemini 3.5 Live Translate (Preview) | Real-time speech-to-speech translation across 70+ languages. |
+
+> [!WARNING]
+> If you find a tutorial using `gemini-2.0-flash-live-001`, it is out of date. The official docs recommend updating to **Gemini 3.8 Live**.
+
+Unlike standard stateless HTTP calls, the **Live API** maintains a stateful, bidirectional WebSocket connection where:
+- **Multimodal Inputs Flow Continuously:** You stream microphone audio chunks, webcam or screen-share frames (`image/jpeg`), and text messages simultaneously through `session.send_realtime_input(...)`.
 - **Native Audio Synthesis:** Instead of piping text through a separate Text-to-Speech (TTS) service that loses emotional nuance and adds 500ms of latency, Gemini synthesizes expressive voice audio directly from its multimodal representation.
 - **Native Voice Activity Detection (VAD) & Barge-In:** If the user speaks while the model is talking, the Live API detects the interruption immediately, stops generating the stale turn, and sends `server_content.interrupted = True` so your client can clear its audio output buffer immediately.
+
+### The audio format you must get right
+
+Input audio is **raw 16-bit PCM, 16 kHz, little-endian**. Get any of those three wrong and the model will hear garbled noise (or nothing at all).
+
+```python
+from google.genai import types
+
+# `pcm_chunk` is raw little-endian 16-bit samples captured at 16,000 Hz.
+await session.send_realtime_input(
+    audio=types.Blob(data=pcm_chunk, mime_type="audio/pcm;rate=16000")
+)
+
+# Plain text works through the same method — handy for testing without a microphone.
+await session.send_realtime_input(text="Hello, how are you?")
+```
 
 ---
 
@@ -62,9 +89,9 @@ Unlike standard HTTP streaming (`generate_content_stream`), the **Gemini Live AP
 A language model becomes an **Agent** when it can observe its environment, reason about a goal, invoke external **Tools (Functions)**, inspect the results, and iterate until the goal is achieved.
 
 ### Two Ways to Execute Tools with `google-genai`
-1. **Automatic Function Calling (Standard `generate_content`):**
-   Pass Python functions directly in `config=types.GenerateContentConfig(tools=[fn1, fn2])`. The `google-genai` SDK automatically inspects type hints and docstrings, generates the OpenAPI function declarations, executes the Python function when requested by Gemini, feeds the result back to the model, and returns the final answer!
-2. **Explicit Async Tool Dispatch (Gemini Live API & Custom Agent Loops):**
+1. **Declarative Tools on the Interactions API:**
+   Pass your Python functions in `tools=[fn1, fn2]` on `client.interactions.create(...)`. The SDK inspects type hints and docstrings to generate the function declarations for you. Remember that `tools` is **interaction-scoped**—you must re-specify it on every turn, even when chaining with `previous_interaction_id`.
+2. **Explicit Async Tool Dispatch (Live API & Custom Agent Loops):**
    In a real-time Live API session, the server emits a `tool_call` event containing one or more `function_calls`. Your async loop executes each function and sends the result back via `await session.send_tool_response(function_responses=[...])`.
 
 ---
@@ -78,7 +105,7 @@ As your agent loops grow from single tool calls into multi-step software enginee
 
 | Capability | Raw `google-genai` API Calls | Google Antigravity (`https://antigravity.google`) |
 | :--- | :--- | :--- |
-| **Primary Abstraction** | Tokens, Prompts, `GenerateContentConfig`, WebSockets | **Agents, Tasks, Artifacts, Skills (`SKILL.md`), Rules & MCP Servers** |
+| **Primary Abstraction** | Tokens, Prompts, `interactions.create`, WebSockets | **Agents, Tasks, Artifacts, Skills (`SKILL.md`), Rules & MCP Servers** |
 | **Execution Scope** | Single request or single live session | Multi-file repository editing, terminal command execution, browser testing |
 | **Extensibility** | Custom function declarations | Standardized **Skills**, **Workspace Rules (`.agents/rules/`)**, and **Model Context Protocol (MCP)** |
 | **Parallelism** | Manual `asyncio.gather()` | Native **Subagent Orchestration** (spawning specialized researcher/implementer/reviewer agents) |
@@ -139,7 +166,7 @@ def calculate_bom_and_margin(
 
 
 def trigger_hero_render_job(product_name: str, visual_style: str) -> Dict[str, str]:
-    """Queues an Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) studio render job for the active product design session.
+    """Queues a Nano Banana studio render job for the active product design session.
 
     Args:
         product_name: Name of the product concept.
@@ -187,19 +214,11 @@ async def run_live_product_copilot() -> None:
     ) as session:
         print("✅ Connected! Sending live founder prompt...")
 
-        await session.send_client_content(
-            turns=types.Content(
-                role="user",
-                parts=[
-                    types.Part.from_text(
-                        text=(
-                            "We are designing the 'AuraField Pro' recorder in titanium for a 10,000-unit run "
-                            "at a $199 retail price. Check our BOM margin and trigger a dramatic studio render!"
-                        )
-                    )
-                ],
-            ),
-            turn_complete=True,
+        await session.send_realtime_input(
+            text=(
+                "We are designing the 'AuraField Pro' recorder in titanium for a 10,000-unit run "
+                "at a $199 retail price. Check our BOM margin and trigger a dramatic studio render!"
+            )
         )
 
         # Process real-time server events (Text, Audio, Barge-In, and Tool Calls)
@@ -278,14 +297,8 @@ async function startLiveCopilotSession() {
     },
   });
 
-  await session.sendClientContent({
-    turns: [
-      {
-        role: "user",
-        parts: [{ text: "Give me 3 rapid industrial design tips for anodized titanium enclosures." }],
-      },
-    ],
-    turnComplete: true,
+  session.sendRealtimeInput({
+    text: "Give me 3 rapid industrial design tips for anodized titanium enclosures.",
   });
 }
 
@@ -297,8 +310,8 @@ startLiveCopilotSession().catch(console.error);
 ## 🧩 Connection to the Flagship Milestone Project
 
 We now have **both core engines** of our Flagship Milestone Project:
-1. **Stage 1 (`stage1_creative_engine.py`)**: High-precision structured specification synthesis + Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) + Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) media generation.
-2. **Stage 2 (`stage2_live_copilot_agent.py`)**: Full-duplex real-time Gemini Live API streaming + autonomous tool execution.
+1. **Stage 1 (`stage1_creative_engine.py`)**: High-precision structured specification synthesis + Nano Banana image generation and editing + Gemini Omni Flash video generation.
+2. **Stage 2 (`stage2_live_copilot_agent.py`)**: Full-duplex real-time Gemini 3.8 Live streaming + autonomous tool execution.
 
 In **Module 04**, we will wrap Stage 1 and Stage 2 inside a hardened **FastAPI + WebSocket server**, containerize it with **Docker**, wire automated zero-secret CI/CD via **GitHub Actions + Workload Identity Federation**, add defense-in-depth **App Security**, and deploy it live to **Google Cloud Run**!
 
@@ -324,14 +337,25 @@ When `message.tool_call` arrives, your code executes each requested function cal
 <summary><strong>Question 3: How does Google Antigravity (`https://antigravity.google`) complement Google AI Studio?</strong></summary>
 
 **Answer:**
-**Google AI Studio** is the developer workbench for prototyping prompts, testing Gemini 3.x / Gemini Image / Gemini Omni endpoints, and managing API keys. **Google Antigravity** (`https://antigravity.google`) is Google's agent-first development platform and SDK harness that orchestrates autonomous multi-step coding, workspace rules (`.agents/rules/`), reusable skills (`SKILL.md`), MCP tools, and parallel subagents across full codebases.
+**Google AI Studio** is the developer workbench for prototyping prompts, testing Gemini 3.x text, Nano Banana image, Gemini Omni Flash video, and Gemini 3.8 Live endpoints, and managing API keys. **Google Antigravity** (`https://antigravity.google`) is Google's agent-first development platform and SDK harness that orchestrates autonomous multi-step coding, workspace rules (`.agents/rules/`), reusable skills (`SKILL.md`), MCP tools, and parallel subagents across full codebases.
+</details>
+
+<details>
+<summary><strong>Question 4: Which model should you connect to for a real-time voice agent, and what exact audio format does it expect?</strong></summary>
+
+**Answer:**
+Connect to **`gemini-3.8-live`** (or `gemini-3.8-live-extended-thinking` when you need deeper background reasoning during the conversation). Input audio must be **raw 16-bit PCM at 16 kHz, little-endian**, sent via `await session.send_realtime_input(audio=types.Blob(...))`. The older `gemini-2.0-flash-live-001` model is legacy and should not be used in new projects.
 </details>
 
 ---
 
 ## 🔗 Verified Public References & Official Documentation
 
-- **Gemini Live API (Bidirectional Multimodal Streaming):** [https://ai.google.dev/gemini-api/docs/live](https://ai.google.dev/gemini-api/docs/live)
+- **Live API Overview:** [https://ai.google.dev/gemini-api/docs/live-api](https://ai.google.dev/gemini-api/docs/live-api)
+- **Live API SDK Quickstart (`get-started-sdk`):** [https://ai.google.dev/gemini-api/docs/live-api/get-started-sdk](https://ai.google.dev/gemini-api/docs/live-api/get-started-sdk)
+- **Live API Tool Use:** [https://ai.google.dev/gemini-api/docs/live-api/tools](https://ai.google.dev/gemini-api/docs/live-api/tools)
+- **Gemini Model Catalog (Live model IDs):** [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
+- **Interactions API Overview (tools on non-live calls):** [https://ai.google.dev/gemini-api/docs/interactions-overview](https://ai.google.dev/gemini-api/docs/interactions-overview)
 - **Function Calling & Tool Use Guide:** [https://ai.google.dev/gemini-api/docs/function-calling](https://ai.google.dev/gemini-api/docs/function-calling)
 - **Google Antigravity Official Platform:** [https://antigravity.google](https://antigravity.google)
 - **Google Antigravity Official Documentation:** [https://antigravity.google/docs](https://antigravity.google/docs)

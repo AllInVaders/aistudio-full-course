@@ -6,9 +6,9 @@
 
 ## 1. Arquitectura de Streaming Bidireccional con Gemini Live API
 
-En una arquitectura HTTP REST tradicional (`generate_content`), el cliente debe esperar a que el usuario termine de hablar, transcribir el audio a texto (STT), enviar el texto al LLM y luego convertir la respuesta a voz (TTS). Esto introduce latencias de 2 a 5 segundos y destruye la fluidez conversacional.
+En una arquitectura de petición y respuesta tradicional (`client.interactions.create`), el cliente debe esperar a que el usuario termine de hablar, transcribir el audio a texto (STT), enviar el texto al modelo y luego convertir la respuesta a voz (TTS). Esto introduce latencias de 2 a 5 segundos y destruye la fluidez conversacional.
 
-La **Gemini Live API** elimina todos los intermediarios: establece una **sesión WebSocket persistente y full-duplex** directamente contra el modelo multimodal nativo.
+La **Live API** elimina todos los intermediarios: establece una **sesión WebSocket persistente y full-duplex** directamente contra el modelo multimodal nativo `gemini-3.8-live`.
 
 ```mermaid
 sequenceDiagram
@@ -37,7 +37,20 @@ sequenceDiagram
 
 ---
 
-## 2. Conceptos Clave de la Gemini Live API
+## 2. Modelos de la Live API
+
+| Modelo | Nombre comercial | Cuándo usarlo |
+| :--- | :--- | :--- |
+| `gemini-3.8-live` | Gemini 3.8 Live | Agente de voz y video en tiempo real. Tu opción por defecto. |
+| `gemini-3.8-live-extended-thinking` | Gemini 3.8 Live Extended Thinking | Cuando el agente necesita razonar en segundo plano mientras mantiene la conversación de voz. |
+| `gemini-3.5-live-translate-preview` | Gemini 3.5 Live Translate | Traducción de voz a voz en tiempo real, más de 70 idiomas. Vista previa. |
+
+> [!WARNING]
+> **`gemini-2.0-flash-live-001` es un modelo heredado.** La documentación oficial recomienda explícitamente migrar a `gemini-3.8-live`. Si encuentras ese identificador en un tutorial o en un repositorio existente, sustitúyelo: el resto del código (`client.aio.live.connect`, el bucle `session.receive()`, el manejo de `tool_call`) no cambia.
+
+---
+
+## 3. Conceptos Clave de la Live API
 
 1. **Formato de Audio PCM Nativo**:
    - **Entrada (Cliente -> Gemini)**: Audio PCM crudo de 16 bits, little-endian, mono, a **16,000 Hz** (`audio/pcm;rate=16000`).
@@ -46,10 +59,24 @@ sequenceDiagram
    - El servidor analiza continuamente el flujo de audio entrante. Si el usuario comienza a hablar mientras el modelo está respondiendo, el servidor aborta la generación en curso y emite un evento con la bandera `server_content.interrupted = True`. Tu aplicación solo debe vaciar la cola de reproducción de audio local para lograr una conversación tan natural como una llamada telefónica humana.
 3. **Visión Continua en Tiempo Real**:
    - Puedes enviar fotogramas JPEG codificados capturados desde la cámara web o la pantalla del ordenador a 1 FPS junto con el audio, permitiendo al modelo "ver" el prototipo o el código del que le estás hablando.
+4. **Envío de Entrada en Tiempo Real (`send_realtime_input`)**:
+   - Todo lo que el usuario produce en vivo (voz, fotogramas, o texto tecleado a mitad de conversación) entra por `await session.send_realtime_input(...)`. Es el método diseñado para flujos continuos y es el que activa la detección automática de fin de turno del servidor.
+
+```python
+from google.genai import types
+
+# Texto suelto en mitad de la conversación
+await session.send_realtime_input(text="Hola, ¿cómo estás?")
+
+# Fragmento de audio capturado del micrófono: PCM 16 bits, 16 kHz, little-endian
+await session.send_realtime_input(
+    audio=types.Blob(data=chunk_pcm_16khz, mime_type="audio/pcm;rate=16000")
+)
+```
 
 ---
 
-## 3. Tool Calling / Function Calling: Conectando Gemini con el Mundo Exterior
+## 4. Tool Calling / Function Calling: Conectando Gemini con el Mundo Exterior
 
 Un modelo de lenguaje aislado solo puede generar texto o audio. El **Function Calling (Llamada a Herramientas)** transforma a Gemini en un **agente capaz de actuar**: consultar bases de datos, modificar el estado de una aplicación, invocar APIs externas o disparar flujos de trabajo.
 
@@ -130,17 +157,13 @@ async def iniciar_copiloto_en_vivo():
     async with client.aio.live.connect(model=modelo_live, config=configuracion_live) as session:
         print("Sesión WebSocket Live API establecida con éxito.")
 
-        # Enviar un turno inicial de texto o audio
-        await session.send_client_content(
-            turns=types.Content(
-                role="user",
-                parts=[
-                    types.Part.from_text(
-                        text="Hola copiloto, cambia el material de los Auriculares Aura a titanio cepillado color grafito y revisa el stock de baterias."
-                    )
-                ],
-            ),
-            turn_complete=True,
+        # Enviar un turno inicial. En una app real, aquí empezarías a bombear
+        # fragmentos de audio PCM de 16 bits a 16 kHz desde el micrófono.
+        await session.send_realtime_input(
+            text=(
+                "Hola copiloto, cambia el material de los Auriculares Aura a titanio "
+                "cepillado color grafito y revisa el stock de baterias."
+            )
         )
 
         # Bucle asíncrono de recepción de eventos del servidor
@@ -213,10 +236,7 @@ async function conectarCopilotoLiveTS() {
     },
   });
 
-  await session.sendClientContent({
-    turns: [{ role: 'user', parts: [{ text: 'Dame 3 ideas rápidas de acabados sostenibles.' }] }],
-    turnComplete: true,
-  });
+  session.sendRealtimeInput({ text: 'Dame 3 ideas rápidas de acabados sostenibles.' });
 }
 
 conectarCopilotoLiveTS();
@@ -224,7 +244,7 @@ conectarCopilotoLiveTS();
 
 ---
 
-## 4. Inmersión Profunda: El SDK Público de Google Antigravity (`antigravity.google`)
+## 5. Inmersión Profunda: El SDK Público de Google Antigravity (`antigravity.google`)
 
 Cuando tu aplicación crece más allá de un par de funciones aisladas y necesitas que un sistema de IA **planifique, navegue por repositorios, ejecute comandos de terminal, verifique resultados y corrija sus propios errores**, entras en el terreno de **Google Antigravity** ([https://antigravity.google](https://antigravity.google)).
 
@@ -250,16 +270,16 @@ Su arquitectura pública se apoya en cuatro pilares fundamentales:
 
 Con el código de este módulo, nuestro **AI Product Studio** ha evolucionado de un generador bajo demanda (Etapa 1) a un **Copiloto Interactivo en Vivo (Etapa 2)**:
 - El usuario puede hablarle por micrófono y mostrarle bocetos en cámara web.
-- El copiloto responde por voz en milisegundos, soporta interrupciones naturales (*barge-in*) y ejecuta herramientas reales (`actualizar_diseno_producto`, `consultar_inventario_componentes`) que actualizan la base de datos y disparan nuevos renders de Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2).
+- El copiloto responde por voz en milisegundos, soporta interrupciones naturales (*barge-in*) y ejecuta herramientas reales (`actualizar_diseno_producto`, `consultar_inventario_componentes`) que actualizan la base de datos y disparan nuevos renders con Nano Banana (`gemini-3.1-flash-image`).
 
 ---
 
 ## Cuestionario de Autoevaluación del Módulo 3
 
-1. **¿Qué frecuencias de muestreo (sample rates) de audio PCM utiliza la Gemini Live API para la entrada del micrófono y para la salida de voz del modelo?**
+1. **¿Qué frecuencias de muestreo (sample rates) de audio PCM utiliza la Live API para la entrada del micrófono y para la salida de voz del modelo?**
    <details>
    <summary>Ver respuesta correcta</summary>
-   La entrada de audio enviada al modelo debe ser PCM de 16 bits mono a <b>16,000 Hz (16 kHz)</b>, mientras que el audio sintetizado devuelto por el modelo es PCM de 16 bits mono a <b>24,000 Hz (24 kHz)</b>.
+   La entrada de audio enviada al modelo debe ser PCM de 16 bits mono, <i>little-endian</i>, a <b>16,000 Hz (16 kHz)</b>, mientras que el audio sintetizado devuelto por el modelo es PCM de 16 bits mono a <b>24,000 Hz (24 kHz)</b>.
    </details>
 
 2. **¿Cómo debe reaccionar tu cliente frontend/backend cuando recibe `response.server_content.interrupted == True`?**
@@ -274,12 +294,28 @@ Con el código de este módulo, nuestro **AI Product Studio** ha evolucionado de
    El SDK inspecciona por reflexión las anotaciones de tipos de Python (<i>type hints</i>) y el <i>docstring</i> (descripción general y sección <code>Args:</code>) para construir automáticamente la declaración <code>FunctionDeclaration</code> compatible con OpenAPI/JSON Schema.
    </details>
 
+4. **Encuentras un tutorial que se conecta con `model="gemini-2.0-flash-live-001"`. ¿Qué haces?**
+   <details>
+   <summary>Ver respuesta correcta</summary>
+   Sustituyes el identificador por <code>gemini-3.8-live</code>. Es un modelo heredado y la documentación oficial recomienda expresamente la migración. El resto del código no cambia: <code>client.aio.live.connect</code>, <code>session.send_realtime_input(...)</code>, el bucle <code>session.receive()</code> y el manejo de <code>tool_call</code> siguen siendo idénticos.
+   </details>
+
+5. **¿Cuándo usarías `gemini-3.8-live-extended-thinking` en lugar de `gemini-3.8-live`?**
+   <details>
+   <summary>Ver respuesta correcta</summary>
+   Cuando el agente de voz necesita razonar en segundo plano durante la conversación, por ejemplo para resolver un cálculo de varios pasos o consultar y correlacionar varias herramientas, sin perder la fluidez de la interacción hablada.
+   </details>
+
 ---
 
 ## Referencias Públicas Verificadas y Documentación Oficial
 
-- [Gemini Live API — Guía Oficial de Streaming Bidireccional](https://ai.google.dev/gemini-api/docs/live)
+- [Live API — Visión General](https://ai.google.dev/gemini-api/docs/live-api)
+- [Live API — Inicio Rápido con el SDK](https://ai.google.dev/gemini-api/docs/live-api/get-started-sdk)
+- [Live API — Uso de Herramientas](https://ai.google.dev/gemini-api/docs/live-api/tools)
+- [Catálogo Oficial de Modelos de la API de Gemini](https://ai.google.dev/gemini-api/docs/models)
 - [Function Calling / Uso de Herramientas en Gemini API](https://ai.google.dev/gemini-api/docs/function-calling)
+- [Interactions API — Visión General](https://ai.google.dev/gemini-api/docs/interactions-overview)
 - [Google Antigravity — Portal Oficial y Documentación](https://antigravity.google)
 - [Documentación Oficial de Google Antigravity Docs](https://antigravity.google/docs)
-- [Repositorio Oficial de Ejemplos del SDK Python `google-genai`](https://github.com/googleapis/python-genai)
+- [Repositorio Oficial del SDK Python `google-genai`](https://github.com/googleapis/python-genai)

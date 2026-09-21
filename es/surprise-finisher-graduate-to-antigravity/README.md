@@ -13,7 +13,7 @@ Observa la evolución que has recorrido a lo largo de este curso:
 ```mermaid
 flowchart LR
     subgraph Nivel1["Nivel 1: Scripts y Prompts (Módulos 1 y 2)"]
-        P1["Tú escribes el prompt -> Gemini devuelve JSON / Gemini Image (`gemini-3.1-flash-image`) / Video"]
+        P1["Tú escribes el prompt -> Gemini devuelve JSON, imagen (Nano Banana) o video (Gemini Omni Flash)"]
     end
 
     subgraph Nivel2["Nivel 2: Copilotos en Tiempo Real (Módulos 3 y 4)"]
@@ -27,7 +27,7 @@ flowchart LR
     Nivel1 --> Nivel2 --> Nivel3
 ```
 
-Cuando trabajas directamente con la API de Gemini (`client.models.generate_content`), tu código controla el flujo paso a paso. Cuando das el salto a **Google Antigravity**, delegas misiones completas de ingeniería de software a un agente equipado con:
+Cuando trabajas directamente con la API de Gemini (`client.interactions.create`), tu código controla el flujo paso a paso. Cuando das el salto a **Google Antigravity**, delegas misiones completas de ingeniería de software a un agente equipado con:
 - Acceso controlado a tu sistema de archivos y terminal.
 - Comprensión semántica profunda de todo tu repositorio.
 - Navegador headless integrado para verificar visualmente tu frontend en vivo.
@@ -60,9 +60,18 @@ Crea el archivo `.agents/rules/arquitectura-genai.md` en la raíz de tu proyecto
 1. **SDK Unificado Obligatorio**:
    - Utiliza EXCLUSIVAMENTE el paquete oficial `google-genai` en Python (`from google import genai`) y `@google/genai` en TypeScript.
    - NUNCA importes ni agregues a `requirements.txt` el paquete obsoleto `google-generativeai`.
-2. **Contratos de Datos Estrictos**:
-   - Toda llamada a `client.models.generate_content` que alimente una API o base de datos DEBE incluir `response_mime_type="application/json"` y un esquema `response_schema` validado con Pydantic v2.
-3. **Seguridad y Secretos**:
+2. **Superficie de API**:
+   - Toda llamada nueva debe usar `client.interactions.create`. No introduzcas `client.models.generate_content` en código nuevo.
+   - Encadena turnos con `previous_interaction_id`. En endpoints públicos, pasa `store=False`.
+3. **Modelos Permitidos (fijados)**:
+   - Texto y agentes: `gemini-3.8-flash`. Razonamiento de frontera: `gemini-3.1-pro-preview`.
+   - Imágenes: `gemini-3.1-flash-image` (o `gemini-3-pro-image` para renders hero).
+   - Video: `gemini-omni-1.1-flash`. Tiempo real: `gemini-3.8-live`.
+   - RECHAZA cualquier cambio que introduzca `imagen-3.0-*`, `veo-*`, `gemini-2.x-*` o los métodos `generate_images` / `generate_videos`.
+4. **Contratos de Datos Estrictos**:
+   - Toda llamada que alimente una API o base de datos DEBE incluir `response_format={"type": "text", "mime_type": "application/json", "schema": ...}` y validarse con Pydantic v2 sobre `interaction.output_text`.
+   - Controla el razonamiento con `generation_config={"thinking_level": ...}`. El parámetro numérico `thinking_budget` ya no existe.
+5. **Seguridad y Secretos**:
    - Jamás escribas llaves de API en código fuente. Lee siempre las credenciales desde variables de entorno inyectadas por Google Cloud Secret Manager.
    - Toda entrada de usuario debe pasar por la función de sanitización y envolverse en delimitadores XML antes de concatenarse en un prompt.
 ```
@@ -85,12 +94,16 @@ Cuando el usuario solicite auditar la seguridad del proyecto o preparar un despl
 
 1. **Verificación del SDK**:
    - Busca en todo el repositorio cualquier aparición de `google.generativeai` y reemplázala por `from google import genai`.
-2. **Inspección de Endpoints FastAPI**:
+2. **Verificación de Modelos y Superficie de API**:
+   - Busca identificadores heredados (`imagen-3.0-`, `veo-`, `gemini-2.0-flash-live`, `gemini-2.5-`) y los métodos `generate_images` / `generate_videos`. Sustitúyelos por `gemini-3.1-flash-image`, `gemini-omni-1.1-flash`, `gemini-3.8-live` y `gemini-3.8-flash` a través de `client.interactions.create`.
+   - Busca `thinking_budget` y reemplázalo por `generation_config={"thinking_level": ...}`.
+3. **Inspección de Endpoints FastAPI**:
    - Verifica que cada ruta `@app.post` limite la longitud de entrada (`max_length`) en su modelo Pydantic.
    - Confirma que los datos del usuario estén delimitados explícitamente y separados de `system_instruction`.
-3. **Verificación de Safety Settings**:
-   - Comprueba que todas las llamadas a `generate_content` incluyan `safety_settings` explícitos.
-4. **Verificación de Pruebas**:
+   - Confirma que los endpoints públicos pasen `store=False`.
+4. **Verificación de Salidas Estructuradas**:
+   - Comprueba que toda llamada que alimente la API declare `response_format` con su esquema y valide `interaction.output_text` con Pydantic.
+5. **Verificación de Pruebas**:
    - Ejecuta `pytest` en la terminal y corrige cualquier fallo antes de reportar la auditoría como superada.
 ```
 
@@ -155,4 +168,7 @@ Para graduarte oficialmente de este curso, abre tu repositorio de **AI Product S
 - [Google Antigravity — Documentación Oficial para Desarrolladores](https://antigravity.google/docs)
 - [Google AI Studio — Portal de Desarrollo y API Keys](https://aistudio.google.com)
 - [Documentación Oficial de la API de Gemini](https://ai.google.dev/gemini-api/docs)
+- [Catálogo Oficial de Modelos de la API de Gemini](https://ai.google.dev/gemini-api/docs/models)
+- [Interactions API — Visión General](https://ai.google.dev/gemini-api/docs/interactions-overview)
+- [Guía de Migración a la Interactions API](https://ai.google.dev/gemini-api/docs/migrate-to-interactions)
 - [SDK Unificado de Google Gen AI en GitHub (`python-genai`)](https://github.com/googleapis/python-genai)

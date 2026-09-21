@@ -12,6 +12,10 @@ using the official `google-genai` SDK and Antigravity workspace conventions:
 Usage:
     export GEMINI_API_KEY="your-api-key"
     python antigravity_agent_demo.py
+
+Docs:
+    https://ai.google.dev/gemini-api/docs/interactions-overview
+    https://antigravity.google
 """
 
 from dataclasses import dataclass, field
@@ -19,8 +23,14 @@ from typing import Callable, Dict, List
 import json
 
 from google import genai
-from google.genai import types
 from pydantic import BaseModel, Field
+
+# Workhorse model for orchestration, delegation, and synthesis.
+ORCHESTRATOR_MODEL = "gemini-3.8-flash"
+
+# The agentic coding model behind the Antigravity IDE. Reference it when you
+# graduate these patterns out of a script and into an Antigravity workspace.
+ANTIGRAVITY_MODEL = "antigravity-preview-05-2026"
 
 
 class SubagentTask(BaseModel):
@@ -49,19 +59,19 @@ class SubagentHarness:
     name: str
     role_prompt: str
     tools: List[Callable] = field(default_factory=list)
-    model_id: str = "gemini-3.7-flash"
+    model_id: str = ORCHESTRATOR_MODEL
 
     def run(self, client: genai.Client, objective: str) -> str:
-        response = client.models.generate_content(
+        # `tools`, `system_instruction`, and `generation_config` are
+        # interaction-scoped, so they are re-specified on every delegation.
+        interaction = client.interactions.create(
             model=self.model_id,
-            contents=objective,
-            config=types.GenerateContentConfig(
-                system_instruction=self.role_prompt,
-                tools=self.tools if self.tools else None,
-                temperature=0.3,
-            ),
+            input=objective,
+            system_instruction=self.role_prompt,
+            tools=self.tools if self.tools else None,
+            generation_config={"temperature": 0.3, "thinking_level": "medium"},
         )
-        return response.text or ""
+        return interaction.output_text or ""
 
 
 def verify_margin_sensitivity(
@@ -87,20 +97,21 @@ def orchestrate_product_launch_mission(product_brief: str) -> FinalSynthesisRepo
 
     # 1. Planner step: generate a structured execution plan
     print("[Orchestrator] Planning multi-agent mission...")
-    plan_resp = client.models.generate_content(
-        model="gemini-3.7-flash",
-        contents=f"Decompose this product launch evaluation into specialist tasks:\n\n{product_brief}",
-        config=types.GenerateContentConfig(
-            system_instruction=(
-                "You are a Lead Antigravity Orchestrator. Break complex product launch requests "
-                "into 2 focused tasks delegated to 'market_researcher' and 'financial_auditor'."
-            ),
-            response_mime_type="application/json",
-            response_schema=ExecutionPlan,
-            temperature=0.2,
+    plan_interaction = client.interactions.create(
+        model=ORCHESTRATOR_MODEL,
+        input=f"Decompose this product launch evaluation into specialist tasks:\n\n{product_brief}",
+        system_instruction=(
+            "You are a Lead Antigravity Orchestrator. Break complex product launch requests "
+            "into 2 focused tasks delegated to 'market_researcher' and 'financial_auditor'."
         ),
+        response_format={
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": ExecutionPlan.model_json_schema(),
+        },
+        generation_config={"temperature": 0.2, "thinking_level": "high"},
     )
-    plan = ExecutionPlan.model_validate_json(plan_resp.text)
+    plan = ExecutionPlan.model_validate_json(plan_interaction.output_text)
     print(f"  -> Mission Plan: {plan.mission_summary} ({len(plan.tasks)} tasks)")
 
     # 2. Initialize specialist subagents
@@ -132,20 +143,21 @@ def orchestrate_product_launch_mission(product_brief: str) -> FinalSynthesisRepo
 
     # 4. Synthesize final bilingual executive decision report
     print("\n[Orchestrator] Synthesizing verified bilingual Go-To-Market report...")
-    synthesis_resp = client.models.generate_content(
-        model="gemini-3.7-flash",
-        contents="\n\n".join(scratchpad),
-        config=types.GenerateContentConfig(
-            system_instruction=(
-                "Synthesize the specialist findings into a verified executive Go-To-Market report "
-                "with summaries in both English and Spanish."
-            ),
-            response_mime_type="application/json",
-            response_schema=FinalSynthesisReport,
-            temperature=0.2,
+    synthesis_interaction = client.interactions.create(
+        model=ORCHESTRATOR_MODEL,
+        input="\n\n".join(scratchpad),
+        system_instruction=(
+            "Synthesize the specialist findings into a verified executive Go-To-Market report "
+            "with summaries in both English and Spanish."
         ),
+        response_format={
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": FinalSynthesisReport.model_json_schema(),
+        },
+        generation_config={"temperature": 0.2, "thinking_level": "high"},
     )
-    return FinalSynthesisReport.model_validate_json(synthesis_resp.text)
+    return FinalSynthesisReport.model_validate_json(synthesis_interaction.output_text)
 
 
 if __name__ == "__main__":
@@ -156,3 +168,7 @@ if __name__ == "__main__":
     report = orchestrate_product_launch_mission(sample_brief)
     print("\n=== FINAL VERIFIED ANTIGRAVITY LAUNCH REPORT ===")
     print(json.dumps(report.model_dump(), indent=2, ensure_ascii=False))
+    print(
+        f"\nGraduate this harness into an Antigravity workspace ({ANTIGRAVITY_MODEL}): "
+        "https://antigravity.google"
+    )

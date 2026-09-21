@@ -106,7 +106,7 @@ Nunca asignes el rol primitivo `Owner` (`roles/owner`) o `Editor` (`roles/editor
 
 | Rol IAM (Identificador Técnico) | Nombre del Rol | Propósito Específico en nuestra Arquitectura |
 | :--- | :--- | :--- |
-| `roles/aiplatform.user` | **Vertex AI User** | Permite invocar modelos Gemini 3.x, Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash en Vertex AI sin otorgar permisos administrativos sobre el proyecto. |
+| `roles/aiplatform.user` | **Vertex AI User** | Permite invocar los modelos Gemini 3.x (`gemini-3.8-flash`, `gemini-3.1-pro-preview`), Nano Banana (`gemini-3.1-flash-image`) y Gemini Omni Flash (`gemini-omni-1.1-flash`) en Vertex AI sin otorgar permisos administrativos sobre el proyecto. |
 | `roles/secretmanager.secretAccessor` | **Secret Manager Secret Accessor** | Permite leer secretos específicos (como `GEMINI_API_KEY` o claves de terceros) en tiempo de ejecución desde Cloud Run. |
 | `roles/run.invoker` | **Cloud Run Invoker** | Permite que un servicio frontend autenticado o un API Gateway invoque nuestro backend en Cloud Run. |
 
@@ -142,12 +142,12 @@ Al ingresar a [https://aistudio.google.com](https://aistudio.google.com), encont
 
 1. **Chat / Prompt Workspace (Estudio de Prompts)**:
    - Permite probar prompts multimodales combinando texto, imágenes, audio, video y documentos PDF.
-   - Panel derecho de hiperparámetros: selección de modelo (`gemini-3.7-flash`, `gemini-3.1-pro`), control de **Temperature**, **Thinking Budget** (presupuesto de razonamiento), **Structured Output** (esquema JSON), **Function Calling** y **Grounding with Google Search**.
+   - Panel derecho de hiperparámetros: selección de modelo (`gemini-3.8-flash`, `gemini-3.1-pro-preview`), control de **Temperature**, **Thinking Level** (`low`, `medium`, `high`), **Structured Output** (esquema JSON), **Function Calling** y **Grounding with Google Search**.
    - Botón **"Get code"**: exporta instantáneamente tu configuración exacta a código Python, JavaScript/TypeScript, Go o cURL usando el SDK `google-genai`.
 2. **Stream Realtime (Estudio Multimodal en Vivo)**:
-   - Interfaz interactiva de latencia ultrabaja para conversar con Gemini mediante micrófono, cámara web o compartición de pantalla usando la **Gemini Live API**.
+   - Interfaz interactiva de latencia ultrabaja para conversar con Gemini mediante micrófono, cámara web o compartición de pantalla usando la **Live API** (`gemini-3.8-live`).
 3. **Generate Media (Estudio de Medios Generativos)**:
-   - Laboratorio visual para experimentar con **Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)** (generación de imágenes fotorrealistas) y **Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)** (generación de video de alta definición).
+   - Laboratorio visual para experimentar con **Nano Banana 2 (`gemini-3.1-flash-image`)** y **Nano Banana Pro (`gemini-3-pro-image`)** para generación y edición conversacional de imágenes, y con **Gemini Omni Flash (`gemini-omni-1.1-flash`)** para video con audio sincronizado nativo.
 4. **API Keys & Usage Dashboard (Llaves y Telemetría)**:
    - Gestión centralizada de llaves de API, estado del plan de facturación, gráficos de consumo en tiempo real, errores HTTP (429 Rate Limit / 500) y consumo de tokens por modelo.
 
@@ -155,14 +155,16 @@ Al ingresar a [https://aistudio.google.com](https://aistudio.google.com), encont
 
 ## 6. Laboratorio Práctico 1: Tu Primer Cliente Multimodal Dual (AI Studio y Vertex AI)
 
-A continuación, escribiremos un script de verificación diagnóstica tanto en **Python** como en **TypeScript** que demuestra cómo inicializar el SDK unificado `google-genai` y consultar metadatos del modelo.
+A continuación, escribiremos un script de verificación diagnóstica tanto en **Python** como en **TypeScript** que demuestra cómo inicializar el SDK unificado `google-genai` y hacer tu primera llamada real.
+
+> [!NOTE]
+> **Dos superficies, un mismo SDK.** La **Interactions API** (`client.interactions.create`) es la superficie estándar que usaremos durante todo el curso: mantiene el estado de la conversación en el servidor y es la única vía para generar imágenes y video. La vía clásica (`client.models.generate_content`) sigue soportada y la mostramos aquí para que reconozcas el estilo de código de los tutoriales anteriores; reaparece una vez más en el Módulo 4, donde los `safety_settings` tienen su forma documentada sobre `GenerateContentConfig`. Detalles en la [guía de migración oficial](https://ai.google.dev/gemini-api/docs/migrate-to-interactions).
 
 ### Implementación en Python (`verify_setup.py`)
 
 ```python
 import os
 from google import genai
-from google.genai import types
 
 
 def verificar_conexion_ai_studio() -> None:
@@ -170,15 +172,12 @@ def verificar_conexion_ai_studio() -> None:
     # El cliente lee automáticamente la variable de entorno GEMINI_API_KEY
     client = genai.Client()
 
-    response = client.models.generate_content(
-        model="gemini-3.7-flash",
-        contents="Confirma en una sola frase que el SDK google-genai está operativo en español.",
-        config=types.GenerateContentConfig(
-            temperature=0.2,
-        ),
+    interaction = client.interactions.create(
+        model="gemini-3.8-flash",
+        input="Confirma en una sola frase que el SDK google-genai está operativo en español.",
+        generation_config={"thinking_level": "low"},
     )
-    print(f"[AI Studio] Respuesta: {response.text}")
-    print(f"[Metadatos de Uso] Tokens totales: {response.usage_metadata.total_token_count}")
+    print(f"[AI Studio] Respuesta: {interaction.output_text}")
 
 
 def verificar_conexion_vertex_ai(project_id: str, location: str = "us-central1") -> None:
@@ -189,11 +188,11 @@ def verificar_conexion_vertex_ai(project_id: str, location: str = "us-central1")
         location=location,
     )
 
-    response = client.models.generate_content(
-        model="gemini-3.7-flash",
-        contents="Confirma en una sola frase que la conexión IAM con Vertex AI está activa.",
+    interaction = client.interactions.create(
+        model="gemini-3.8-flash",
+        input="Confirma en una sola frase que la conexión IAM con Vertex AI está activa.",
     )
-    print(f"[Vertex AI] Respuesta: {response.text}")
+    print(f"[Vertex AI] Respuesta: {interaction.output_text}")
 
 
 if __name__ == "__main__":
@@ -201,6 +200,26 @@ if __name__ == "__main__":
         verificar_conexion_ai_studio()
     else:
         print("Define export GEMINI_API_KEY='tu_llave' para probar AI Studio.")
+```
+
+### La Vía Clásica y Compatible (`client.models.generate_content`)
+
+Esta es la única sección del curso donde enseñamos la superficie clásica (reaparece solo una vez más, en el Módulo 4, para los `safety_settings`). Guárdala como referencia de lectura: si heredas un proyecto escrito así, funciona, pero la recomendación es migrarlo a `client.interactions.create`.
+
+```python
+from google import genai
+from google.genai import types
+
+client = genai.Client()
+
+# Vía clásica: sin estado en servidor, tú gestionas el historial completo.
+response = client.models.generate_content(
+    model="gemini-3.8-flash",
+    contents="Confirma en una sola frase que el SDK google-genai está operativo.",
+    config=types.GenerateContentConfig(temperature=0.2),
+)
+print(response.text)
+print(f"Tokens totales: {response.usage_metadata.total_token_count}")
 ```
 
 ### Implementación en TypeScript / Node.js (`verify_setup.ts`)
@@ -212,20 +231,38 @@ import { GoogleGenAI } from '@google/genai';
 const ai = new GoogleGenAI({});
 
 async function verificarConexion(): Promise<void> {
-  const response = await ai.models.generateContent({
-    model: 'gemini-3.7-flash',
-    contents: 'Confirma en una sola frase que el SDK @google/genai en TypeScript funciona correctamente.',
-    config: {
-      temperature: 0.2,
-    },
+  const interaction = await ai.interactions.create({
+    model: 'gemini-3.8-flash',
+    input: 'Confirma en una sola frase que el SDK @google/genai en TypeScript funciona correctamente.',
+    generation_config: { thinking_level: 'low' },
   });
 
-  console.log('[AI Studio TS] Respuesta:', response.text);
-  console.log('[Uso de Tokens]:', response.usageMetadata?.totalTokenCount);
+  console.log('[AI Studio TS] Respuesta:', interaction.output_text);
 }
 
 verificarConexion().catch(console.error);
 ```
+
+### Continuar la Conversación sin Reenviar el Historial
+
+La ventaja inmediata de la Interactions API es el estado en servidor. En lugar de acumular mensajes en un arreglo local, encadenas turnos con `previous_interaction_id`:
+
+```python
+primera = client.interactions.create(
+    model="gemini-3.8-flash",
+    input="Resume qué es Google AI Studio en una frase.",
+)
+
+segunda = client.interactions.create(
+    model="gemini-3.8-flash",
+    input="Ahora explícalo como si tuviera 10 años.",
+    previous_interaction_id=primera.id,
+)
+print(segunda.output_text)
+```
+
+> [!TIP]
+> El historial se retiene en el servidor sólo si la interacción se almacenó (bandera `store`). Si trabajas con datos sensibles y no quieres retención, desactiva el almacenamiento y gestiona el contexto tú mismo. Los parámetros `tools`, `system_instruction` y `generation_config` tienen alcance por interacción: hay que volver a indicarlos en cada turno.
 
 ---
 
@@ -249,7 +286,7 @@ En este primer módulo hemos establecido los **cimientos de seguridad y gobernan
 2. **¿Qué paquete de Python debes instalar siempre para trabajar con los modelos Gemini actuales y por qué?**
    <details>
    <summary>Ver respuesta correcta</summary>
-   Debes instalar siempre <code>google-genai</code> (importado como <code>from google import genai</code>). El paquete anterior <code>google-generativeai</code> está obsoleto y no soporta la unificación con Vertex AI ni las capacidades más recientes como Gemini Live API, Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash.
+   Debes instalar siempre <code>google-genai</code> (importado como <code>from google import genai</code>). El paquete anterior <code>google-generativeai</code> está obsoleto y no soporta la unificación con Vertex AI ni las capacidades actuales como la Interactions API, la Live API (<code>gemini-3.8-live</code>), Nano Banana (<code>gemini-3.1-flash-image</code>) y Gemini Omni Flash (<code>gemini-omni-1.1-flash</code>).
    </details>
 
 3. **¿Cuáles son los tres roles IAM de mínimo privilegio que asignamos a nuestra cuenta de servicio de producción y qué hace cada uno?**
@@ -268,13 +305,22 @@ En este primer módulo hemos establecido los **cimientos de seguridad y gobernan
    <b>RPM</b>: Requests Per Minute (solicitudes por minuto). <b>TPM</b>: Tokens Per Minute (tokens procesados por minuto). <b>RPD</b>: Requests Per Day (solicitudes máximas por día).
    </details>
 
+5. **¿Qué ventaja concreta te da `client.interactions.create` frente a la vía clásica `client.models.generate_content` en una conversación de varios turnos?**
+   <details>
+   <summary>Ver respuesta correcta</summary>
+   La Interactions API guarda el estado de la conversación <b>en el servidor</b>. En lugar de acumular y reenviar todo el historial en cada petición, encadenas turnos pasando <code>previous_interaction_id</code> con el id de la interacción anterior. Esto reduce el tamaño de cada solicitud y evita errores de gestión manual del historial. Ten presente que <code>tools</code>, <code>system_instruction</code> y <code>generation_config</code> tienen alcance por interacción y debes volver a especificarlos en cada turno.
+   </details>
+
 ---
 
 ## Referencias Públicas Verificadas y Documentación Oficial
 
 - [Google AI Studio — Gestión de Llaves de API](https://aistudio.google.com/apikey)
+- [Catálogo Oficial de Modelos de la API de Gemini](https://ai.google.dev/gemini-api/docs/models)
+- [Interactions API — Visión General](https://ai.google.dev/gemini-api/docs/interactions-overview)
+- [Guía de Migración a la Interactions API](https://ai.google.dev/gemini-api/docs/migrate-to-interactions)
 - [Documentación de Límites de Tasa y Cuotas de la API de Gemini](https://ai.google.dev/gemini-api/docs/rate-limits)
 - [Precios y Niveles de Facturación de Gemini API](https://ai.google.dev/pricing)
-- [Guía de Migración al SDK Unificado de Google Gen AI](https://ai.google.dev/gemini-api/docs/migrate)
 - [Roles y Permisos IAM de Vertex AI en Google Cloud](https://cloud.google.com/vertex-ai/docs/general/access-control)
 - [Configuración de Presupuestos y Alertas en Google Cloud Billing](https://cloud.google.com/billing/docs/how-to/budgets)
+

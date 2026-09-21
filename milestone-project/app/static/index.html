@@ -108,6 +108,21 @@
       flex-direction: column;
       gap: 0.5rem;
     }
+    .opt {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    #promo-preview {
+      display: none;
+      width: 100%;
+      margin-top: 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
     .msg-user { color: var(--accent-2); }
     .msg-tool { color: #fbbf24; font-family: monospace; font-size: 0.78rem; }
   </style>
@@ -116,7 +131,7 @@
   <header>
     <div class="brand">
       <h1 id="title-main">AI Product Studio & Live Multimodal Copilot</h1>
-      <p id="title-sub">Powered by Gemini 3.7 Flash • Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) • Gemini Live API • Cloud Run</p>
+      <p id="title-sub">Powered by Gemini 3.8 Flash • Nano Banana • Gemini Omni Flash • Gemini 3.8 Live • Cloud Run</p>
     </div>
     <button class="lang-toggle" id="lang-btn" onclick="toggleLanguage()">ES / EN</button>
   </header>
@@ -124,24 +139,34 @@
   <main>
     <!-- 1. Structured Launch Brief Generator -->
     <section class="card">
-      <h2 id="h-brief">1. Structured Bilingual Launch Kit (Gemini 3.7 Flash)</h2>
+      <h2 id="h-brief">1. Structured Bilingual Launch Kit (Gemini 3.8 Flash)</h2>
       <textarea id="concept-input" rows="3">AeroBrew Nano: Pocket-sized ultrasonic cold-brew espresso maker for frequent flyers</textarea>
       <button class="primary" onclick="generateBrief()" id="btn-brief">Generate Structured Launch Kit</button>
-      <pre id="brief-output">Click "Generate Structured Launch Kit" to run Gemini 3.7 Flash with Pydantic JSON Schema...</pre>
+      <pre id="brief-output">Click "Generate Structured Launch Kit" to run gemini-3.8-flash with a Pydantic JSON schema...</pre>
     </section>
 
-    <!-- 2. Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Hero Studio -->
+    <!-- 2. Nano Banana Studio -->
     <section class="card">
-      <h2 id="h-imagen">2. Studio Hero Shot Generator (Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2))</h2>
-      <textarea id="imagen-prompt" rows="3">Minimalist anodized matte black pocket espresso maker on travertine stone counter, dramatic warm rim lighting, 85mm macro lens, photorealistic commercial product photography</textarea>
-      <button class="primary" onclick="generateImage()" id="btn-imagen">Render Studio Hero Image</button>
-      <img id="hero-preview" alt="Generated Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Hero Shot" />
-      <pre id="imagen-status">Ready to render 16:9 studio product photography via Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2).</pre>
+      <h2 id="h-image">2. Nano Banana Studio — Hero Shot Generator</h2>
+      <textarea id="image-prompt" rows="3">Minimalist anodized matte black pocket espresso maker on travertine stone counter, dramatic warm rim lighting, 85mm macro lens, photorealistic commercial product photography</textarea>
+      <label class="opt"><input type="checkbox" id="image-hifi" /> <span id="lbl-hifi">High fidelity (Nano Banana Pro, 4K + precise text)</span></label>
+      <button class="primary" onclick="generateImage()" id="btn-image">Render Studio Hero Image</button>
+      <img id="hero-preview" alt="Generated studio hero shot" />
+      <pre id="image-status">Ready to render 16:9 studio product photography via gemini-3.1-flash-image.</pre>
     </section>
 
-    <!-- 3. Gemini Live API WebSocket Copilot -->
+    <!-- 3. Gemini Omni Video -->
     <section class="card">
-      <h2 id="h-live">3. Gemini Live API Copilot + Function Calling (WebSocket)</h2>
+      <h2 id="h-video">3. Gemini Omni Video — Promo Clip Generator</h2>
+      <textarea id="video-prompt" rows="3">Slow cinematic dolly-in on the matte black espresso maker as warm morning light sweeps across the travertine counter, steam rising, shallow depth of field</textarea>
+      <button class="primary" onclick="generateVideo()" id="btn-video">Render Promo Video</button>
+      <video id="promo-preview" controls playsinline></video>
+      <pre id="video-status">Ready to render a 16:9 promo clip via gemini-omni-1.1-flash.</pre>
+    </section>
+
+    <!-- 4. Gemini Live API WebSocket Copilot -->
+    <section class="card">
+      <h2 id="h-live">4. Gemini 3.8 Live Copilot + Function Calling (WebSocket)</h2>
       <div class="chat-log" id="chat-log"></div>
       <input id="live-input" type="text" value="Calculate unit economics for unit cost $28, retail price $99, and CAC $22." />
       <button class="primary" onclick="sendLiveMessage()" id="btn-live">Send Live Turn</button>
@@ -155,22 +180,28 @@
     const I18N = {
       en: {
         titleMain: 'AI Product Studio & Live Multimodal Copilot',
-        titleSub: 'Powered by Gemini 3.7 Flash • Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) • Gemini Live API • Cloud Run',
-        hBrief: '1. Structured Bilingual Launch Kit (Gemini 3.7 Flash)',
+        titleSub: 'Powered by Gemini 3.8 Flash • Nano Banana • Gemini Omni Flash • Gemini 3.8 Live • Cloud Run',
+        hBrief: '1. Structured Bilingual Launch Kit (Gemini 3.8 Flash)',
         btnBrief: 'Generate Structured Launch Kit',
-        hImagen: '2. Studio Hero Shot Generator (Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2))',
-        btnImagen: 'Render Studio Hero Image',
-        hLive: '3. Gemini Live API Copilot + Function Calling (WebSocket)',
+        hImage: '2. Nano Banana Studio — Hero Shot Generator',
+        lblHifi: 'High fidelity (Nano Banana Pro, 4K + precise text)',
+        btnImage: 'Render Studio Hero Image',
+        hVideo: '3. Gemini Omni Video — Promo Clip Generator',
+        btnVideo: 'Render Promo Video',
+        hLive: '4. Gemini 3.8 Live Copilot + Function Calling (WebSocket)',
         btnLive: 'Send Live Turn',
       },
       es: {
         titleMain: 'Estudio de Productos IA y Copiloto Multimodal en Vivo',
-        titleSub: 'Impulsado por Gemini 3.7 Flash • Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) • Gemini Live API • Cloud Run',
-        hBrief: '1. Kit de Lanzamiento Estructurado Bilingüe (Gemini 3.7 Flash)',
+        titleSub: 'Impulsado por Gemini 3.8 Flash • Nano Banana • Gemini Omni Flash • Gemini 3.8 Live • Cloud Run',
+        hBrief: '1. Kit de Lanzamiento Estructurado Bilingüe (Gemini 3.8 Flash)',
         btnBrief: 'Generar Kit de Lanzamiento JSON',
-        hImagen: '2. Generador de Fotografía Hero de Estudio (Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2))',
-        btnImagen: 'Renderizar Fotografía con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)',
-        hLive: '3. Copiloto en Vivo Gemini Live API + Herramientas (WebSocket)',
+        hImage: '2. Estudio Nano Banana — Generador de Fotografía Hero',
+        lblHifi: 'Alta fidelidad (Nano Banana Pro, 4K y texto preciso)',
+        btnImage: 'Renderizar Fotografía Hero',
+        hVideo: '3. Video Gemini Omni — Generador de Clip Promocional',
+        btnVideo: 'Renderizar Video Promocional',
+        hLive: '4. Copiloto en Vivo Gemini 3.8 Live + Herramientas (WebSocket)',
         btnLive: 'Enviar Mensaje en Vivo',
       }
     };
@@ -182,15 +213,18 @@
       document.getElementById('title-sub').textContent = t.titleSub;
       document.getElementById('h-brief').textContent = t.hBrief;
       document.getElementById('btn-brief').textContent = t.btnBrief;
-      document.getElementById('h-imagen').textContent = t.hImagen;
-      document.getElementById('btn-imagen').textContent = t.btnImagen;
+      document.getElementById('h-image').textContent = t.hImage;
+      document.getElementById('lbl-hifi').textContent = t.lblHifi;
+      document.getElementById('btn-image').textContent = t.btnImage;
+      document.getElementById('h-video').textContent = t.hVideo;
+      document.getElementById('btn-video').textContent = t.btnVideo;
       document.getElementById('h-live').textContent = t.hLive;
       document.getElementById('btn-live').textContent = t.btnLive;
     }
 
     async function generateBrief() {
       const out = document.getElementById('brief-output');
-      out.textContent = 'Generating structured bilingual brief with Gemini 3.7 Flash...';
+      out.textContent = 'Generating structured bilingual brief with gemini-3.8-flash...';
       try {
         const res = await fetch('/api/generate-brief', {
           method: 'POST',
@@ -199,8 +233,11 @@
         });
         const data = await res.json();
         out.textContent = JSON.stringify(data, null, 2);
-        if (data.imagen_hero_prompt) {
-          document.getElementById('imagen-prompt').value = data.imagen_hero_prompt;
+        if (data.hero_image_prompt) {
+          document.getElementById('image-prompt').value = data.hero_image_prompt;
+        }
+        if (data.promo_video_prompt) {
+          document.getElementById('video-prompt').value = data.promo_video_prompt;
         }
       } catch (err) {
         out.textContent = 'Error: ' + err.message;
@@ -208,20 +245,47 @@
     }
 
     async function generateImage() {
-      const status = document.getElementById('imagen-status');
+      const status = document.getElementById('image-status');
       const img = document.getElementById('hero-preview');
-      status.textContent = 'Rendering 16:9 product hero image with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)...';
+      const highFidelity = document.getElementById('image-hifi').checked;
+      status.textContent = 'Rendering 16:9 product hero image with Nano Banana...';
       try {
         const res = await fetch('/api/generate-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: document.getElementById('imagen-prompt').value })
+          body: JSON.stringify({
+            prompt: document.getElementById('image-prompt').value,
+            high_fidelity: highFidelity
+          })
         });
         const data = await res.json();
         if (data.image_base64) {
           img.src = `data:${data.mime_type};base64,${data.image_base64}`;
           img.style.display = 'block';
-          status.textContent = 'Rendered successfully via gemini-3.1-flash-image.';
+          status.textContent = `Rendered successfully via ${data.model}. Images carry a SynthID watermark.`;
+        } else {
+          status.textContent = JSON.stringify(data);
+        }
+      } catch (err) {
+        status.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    async function generateVideo() {
+      const status = document.getElementById('video-status');
+      const video = document.getElementById('promo-preview');
+      status.textContent = 'Rendering 16:9 promo clip with Gemini Omni Flash. This can take a minute...';
+      try {
+        const res = await fetch('/api/generate-video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: document.getElementById('video-prompt').value })
+        });
+        const data = await res.json();
+        if (data.video_base64) {
+          video.src = `data:${data.mime_type};base64,${data.video_base64}`;
+          video.style.display = 'block';
+          status.textContent = `Rendered successfully via ${data.model}.`;
         } else {
           status.textContent = JSON.stringify(data);
         }

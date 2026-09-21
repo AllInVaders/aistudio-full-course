@@ -3,13 +3,18 @@
 Module 01 Lab: Environment Setup, Model Discovery & Token Economics Verification
 ================================================================================
 Verifies authentication (GEMINI_API_KEY or Application Default Credentials),
-discovers available Gemini, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), and Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) models via the unified `google-genai`
-SDK, runs a token accounting check (`client.models.count_tokens`), and prints a
-diagnostic health report.
+probes the current Gemini model families via the unified `google-genai` SDK,
+runs a token accounting check (`client.models.count_tokens`), exercises BOTH
+the modern Interactions API and the classic `generate_content` path, and prints
+a diagnostic health report.
 
 Usage:
     export GEMINI_API_KEY="your-api-key"
     python verify_setup.py
+
+Docs:
+    https://ai.google.dev/gemini-api/docs/models
+    https://ai.google.dev/gemini-api/docs/interactions-overview
 """
 
 import os
@@ -19,6 +24,19 @@ from typing import Dict, List, Tuple
 
 from google import genai
 from google.genai import types
+
+# The default workhorse for every lab in this course.
+DEFAULT_MODEL = "gemini-3.8-flash"
+
+# The model families the course actually exercises. Each entry is
+# (model_id, friendly_label, what_it_is_used_for).
+PROBE_TARGETS: List[Tuple[str, str, str]] = [
+    (DEFAULT_MODEL, "Gemini 3.8 Flash", "Text, reasoning, structured output, agents"),
+    ("gemini-3.1-flash-image", "Nano Banana 2", "Default production image generation"),
+    ("gemini-3-pro-image", "Nano Banana Pro", "4K hero renders, precise text rendering"),
+    ("gemini-omni-1.1-flash", "Gemini Omni Flash", "Video generation and editing"),
+    ("gemini-3.8-live", "Gemini 3.8 Live", "Real-time voice and video agents"),
+]
 
 
 def check_auth_mode() -> Tuple[str, bool]:
@@ -36,33 +54,47 @@ def check_auth_mode() -> Tuple[str, bool]:
     return "Missing Credentials (set GEMINI_API_KEY or GOOGLE_GENAI_USE_VERTEXAI=true)", False
 
 
-def discover_models(client: genai.Client) -> Dict[str, List[str]]:
-    """Lists available models grouped by modality family (Gemini, Gemini Image, Gemini Omni, Embeddings)."""
-    families: Dict[str, List[str]] = {
-        "Gemini (Text / Multimodal / Live)": [],
-        "Gemini Image (Image Generation)": [],
-        "Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (Video Generation)": [],
-        "Embeddings": [],
-    }
-    for model in client.models.list():
-        name = (model.name or "").replace("models/", "")
-        lowered = name.lower()
-        if "imagen" in lowered:
-            families["Gemini Image (Image Generation)"].append(name)
-        elif "veo" in lowered:
-            families["Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (Video Generation)"].append(name)
-        elif "embedding" in lowered:
-            families["Embeddings"].append(name)
-        elif "gemini" in lowered:
-            families["Gemini (Text / Multimodal / Live)"].append(name)
+def probe_model_families(client: genai.Client) -> List[Dict[str, str]]:
+    """Checks each model family this course depends on against the live catalog.
 
-    for key in families:
-        families[key] = sorted(families[key])
-    return families
+    Returns one row per probe target describing whether the current credentials
+    can actually see that model.
+    """
+    try:
+        available = {
+            (model.name or "").replace("models/", "").lower()
+            for model in client.models.list()
+        }
+    except Exception as exc:  # noqa: BLE001 - surfaced in the health report, not fatal.
+        available = set()
+        print(f"[WARN] Could not list models: {exc}", file=sys.stderr)
+
+    rows: List[Dict[str, str]] = []
+    for model_id, label, purpose in PROBE_TARGETS:
+        if model_id in available:
+            status = "AVAILABLE"
+        elif any(name.startswith(model_id) for name in available):
+            # Catalog sometimes exposes a dated/suffixed alias of the same family.
+            status = "AVAILABLE (aliased)"
+        elif not available:
+            status = "UNKNOWN"
+        else:
+            status = "NOT VISIBLE"
+        rows.append(
+            {
+                "model_id": model_id,
+                "label": label,
+                "purpose": purpose,
+                "status": status,
+            }
+        )
+    return rows
 
 
-def run_token_economics_check(client: genai.Client, model_id: str = "gemini-3.7-flash") -> Dict[str, int]:
-    """Counts tokens on a sample prompt and estimates input/output cost per 1M tokens."""
+def run_token_economics_check(
+    client: genai.Client, model_id: str = DEFAULT_MODEL
+) -> Dict[str, int]:
+    """Counts tokens on a sample prompt and measures classic generate_content latency."""
     sample_prompt = (
         "You are an AI Product Studio strategist. Summarize the three pillars of a "
         "high-converting product launch brief (Positioning, Visual Identity, Unit Economics) "
@@ -92,7 +124,34 @@ def run_token_economics_check(client: genai.Client, model_id: str = "gemini-3.7-
     }
 
 
-def print_health_table(auth_desc: str, families: Dict[str, List[str]], metrics: Dict[str, int]) -> None:
+def run_interactions_smoke_test(
+    client: genai.Client, model_id: str = DEFAULT_MODEL
+) -> Dict[str, str]:
+    """Exercises the Interactions API, the surface the rest of this course teaches.
+
+    `thinking_level` replaces the old numeric reasoning budget and accepts
+    "low", "medium", or "high".
+    """
+    start = time.perf_counter()
+    interaction = client.interactions.create(
+        model=model_id,
+        input="Reply with exactly the word: READY",
+        generation_config={"thinking_level": "low"},
+    )
+    elapsed_ms = int((time.perf_counter() - start) * 1000)
+    return {
+        "reply": (interaction.output_text or "").strip(),
+        "interaction_id": getattr(interaction, "id", "") or "(not returned)",
+        "latency_ms": str(elapsed_ms),
+    }
+
+
+def print_health_table(
+    auth_desc: str,
+    family_rows: List[Dict[str, str]],
+    metrics: Dict[str, int],
+    interactions: Dict[str, str],
+) -> None:
     """Renders a clean ASCII diagnostic health table to stdout."""
     line = "=" * 78
     print(f"\n{line}")
@@ -101,21 +160,26 @@ def print_health_table(auth_desc: str, families: Dict[str, List[str]], metrics: 
     print(f"  Auth Mode          : {auth_desc}")
     print(f"  Python Runtime     : {sys.version.split()[0]}")
     print(f"  google-genai SDK   : {getattr(genai, '__version__', 'installed')}")
+    print(f"  Default Model      : {DEFAULT_MODEL}")
     print("-" * 78)
     print("  MODEL FAMILY AVAILABILITY")
-    for family, models in families.items():
-        preview = ", ".join(models[:4]) if models else "None detected for this key/project"
-        suffix = f" (+{len(models) - 4} more)" if len(models) > 4 else ""
-        print(f"    - {family:<34}: {len(models):>2} models | {preview}{suffix}")
+    for row in family_rows:
+        print(f"    - {row['model_id']:<24} {row['status']:<20} {row['label']}")
+        print(f"      {'':<24} {'':<20} {row['purpose']}")
     print("-" * 78)
-    print("  TOKEN ECONOMICS & LATENCY CHECK (gemini-3.7-flash)")
+    print(f"  TOKEN ECONOMICS & LATENCY — classic generate_content ({DEFAULT_MODEL})")
     print(f"    - Preflight count_tokens()   : {metrics['preflight_tokens']} tokens")
     print(f"    - Actual Prompt Tokens       : {metrics['prompt_tokens']} tokens")
     print(f"    - Output Candidate Tokens    : {metrics['candidates_tokens']} tokens")
     print(f"    - Total Billed Tokens        : {metrics['total_tokens']} tokens")
     print(f"    - Round-trip Latency         : {metrics['latency_ms']} ms")
+    print("-" * 78)
+    print(f"  INTERACTIONS API SMOKE TEST ({DEFAULT_MODEL}, thinking_level=low)")
+    print(f"    - Model Reply                : {interactions['reply']}")
+    print(f"    - Interaction ID             : {interactions['interaction_id']}")
+    print(f"    - Round-trip Latency         : {interactions['latency_ms']} ms")
     print(line)
-    print("  STATUS: READY FOR MODULE 02 (PROMPTS, STRUCTURED OUTPUTS, IMAGEN 3 & VEO)")
+    print("  STATUS: READY FOR MODULE 02 (PROMPTS, STRUCTURED OUTPUTS, NANO BANANA & OMNI)")
     print(f"{line}\n")
 
 
@@ -127,9 +191,10 @@ def main() -> int:
         return 1
 
     client = genai.Client()
-    families = discover_models(client)
+    family_rows = probe_model_families(client)
     metrics = run_token_economics_check(client)
-    print_health_table(auth_desc, families, metrics)
+    interactions = run_interactions_smoke_test(client)
+    print_health_table(auth_desc, family_rows, metrics, interactions)
     return 0
 
 

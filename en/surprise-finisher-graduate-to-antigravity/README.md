@@ -31,7 +31,7 @@ flowchart TB
     end
 
     subgraph StageB["Level 2: Unified `google-genai` Application Code"]
-        B1["FastAPI + WebSocket Microservice\n(Your App Calls Gemini, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) & Live API)"]
+        B1["FastAPI + WebSocket Microservice\n(Your App Calls Gemini 3.8 Flash, Nano Banana, Gemini Omni Flash & Gemini 3.8 Live)"]
     end
 
     subgraph StageC["Level 3: Google Antigravity (`https://antigravity.google`)"]
@@ -83,9 +83,11 @@ Workspace Rules are persistent architectural mandates that every Antigravity age
 
 ## Mandatory SDK & Model Standards
 1. **Unified SDK Only:** Always use the official `google-genai` Python SDK (`from google import genai`, `client = genai.Client()`) or `@google/genai` TypeScript SDK. NEVER import the deprecated `google-generativeai` package.
-2. **Structured Outputs:** Any endpoint returning structured data MUST enforce `response_mime_type="application/json"` with a validated Pydantic `BaseModel` schema (`response_schema=...`).
-3. **Security Guardrails:** Every user-facing prompt input MUST pass through `sanitize_user_brief()` and be wrapped inside `<untrusted_user_brief>...</untrusted_user_brief>` XML tags.
-4. **Verification Before Completion:** Never mark a task complete without running `pytest` and verifying `/healthz` returns HTTP 200.
+2. **Interactions API First:** Use `client.interactions.create(...)` for all text, JSON, image, and video generation. Any endpoint returning structured data MUST pass `response_format={"type": "text", "mime_type": "application/json", "schema": MyModel.model_json_schema()}` and validate the result with Pydantic.
+3. **Approved Models Only:** `gemini-3.8-flash` (default text), `gemini-3.1-pro-preview` (frontier reasoning), `gemini-3.1-flash-image` / `gemini-3-pro-image` (Nano Banana), `gemini-omni-1.1-flash` (Gemini Omni Flash video), `gemini-3.8-live` (realtime). Reject any diff introducing a model ID outside this list.
+4. **Reasoning Control:** Use `generation_config={"thinking_level": "low"|"medium"|"high"}`. Numeric thinking budgets are forbidden.
+5. **Security Guardrails:** Every user-facing prompt input MUST pass through `sanitize_user_brief()` and be wrapped inside `<untrusted_user_brief>...</untrusted_user_brief>` XML tags.
+6. **Verification Before Completion:** Never mark a task complete without running `pytest` and verifying `/healthz` returns HTTP 200.
 ```
 
 ### Step 2: Create a Reusable Custom Agent Skill (`.agents/skills/add-studio-tool/SKILL.md`)
@@ -121,7 +123,7 @@ Follow this exact 4-step workflow whenever adding a new tool to the AI Product S
 
 Whether you invoke agents inside the **Google Antigravity IDE (`https://antigravity.google`)** or build your own multi-agent harness using the **Google Gen AI & Antigravity SDK patterns**, the core architectural secret is **Specialized Subagent Decomposition with Parallel Execution**.
 
-Below is a complete, runnable **Multi-Agent Orchestrator** that dispatches three specialized Gemini 3.7 / 3.1 agents in parallel (**Product Architect**, **Security Auditor**, and **FinOps Cost Optimizer**) and synthesizes their findings into an executive engineering blueprint.
+Below is a complete, runnable **Multi-Agent Orchestrator** that dispatches three specialized **Gemini 3.8 Flash** agents in parallel (**Product Architect**, **Security Auditor**, and **FinOps Cost Optimizer**) and synthesizes their findings into an executive engineering blueprint with **Gemini 3.1 Pro Preview**.
 
 ### Python Implementation (`graduate_multi_agent_orchestrator.py`)
 
@@ -133,21 +135,23 @@ Dispatches 3 specialized subagents concurrently and synthesizes an executive blu
 
 import asyncio
 from typing import Dict
+
 from google import genai
-from google.genai import types
 
 
 SUBAGENT_PERSONAS: Dict[str, str] = {
     "ProductArchitect": (
         "You are the Principal Multimodal Systems Architect. Analyze the feature request and "
-        "specify exact Gemini 3.7 / 3.1 / Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) / Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) / Live API endpoints, schemas, and latency budgets."
+        "specify exact Gemini 3.8 Flash / Nano Banana / Gemini Omni Flash / Live API endpoints, "
+        "schemas, and latency budgets."
     ),
     "SecurityAuditor": (
         "You are the Lead AI Security & Red-Team Auditor. Identify prompt injection vectors, "
-        "IAM permission requirements, Secret Manager bindings, and rate-limit rules for this feature."
+        "IAM permission requirements, Secret Manager bindings, interaction retention risks, and "
+        "rate-limit rules for this feature."
     ),
     "FinOpsOptimizer": (
-        "You are the Cloud FinOps & Token Economics Specialist. Recommend thinking_budget settings, "
+        "You are the Cloud FinOps & Token Economics Specialist. Recommend thinking_level settings, "
         "context caching strategies, and Flash vs. Pro routing rules to cut token spend by 50%+."
     ),
 }
@@ -160,17 +164,19 @@ async def run_specialized_subagent(
     feature_spec: str,
 ) -> Dict[str, str]:
     print(f"🤖 Spawning Subagent [{role_name}]...")
-    response = await client.aio.models.generate_content(
-        model="gemini-3.7-flash",
-        contents=feature_spec,
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt,
-            thinking_config=types.ThinkingConfig(thinking_budget=1024),
-            temperature=0.2,
-        ),
+
+    # `interactions.create` is synchronous, so hand it to a worker thread. All three
+    # subagents then genuinely overlap under `asyncio.gather`.
+    interaction = await asyncio.to_thread(
+        client.interactions.create,
+        model="gemini-3.8-flash",
+        input=feature_spec,
+        system_instruction=system_prompt,
+        generation_config={"thinking_level": "medium", "temperature": 0.2},
     )
+
     print(f"✅ Subagent [{role_name}] completed analysis.")
-    return {"role": role_name, "report": response.text or ""}
+    return {"role": role_name, "report": interaction.output_text or ""}
 
 
 async def orchestrate_feature_evolution(feature_request: str) -> None:
@@ -187,37 +193,35 @@ async def orchestrate_feature_evolution(feature_request: str) -> None:
     ]
     subagent_reports = await asyncio.gather(*tasks)
 
-    # 2. Synthesize subagent findings with the Lead Orchestrator Agent (Gemini 3.1 Pro)
+    # 2. Synthesize subagent findings with the Lead Orchestrator Agent (Gemini 3.1 Pro Preview)
     combined_context = "\n\n".join(
         f"### Report from {item['role']}\n{item['report']}" for item in subagent_reports
     )
 
     print("\n🧠 Lead Orchestrator synthesizing final Implementation Plan...")
-    final_plan = await client.aio.models.generate_content(
-        model="gemini-3.1-pro",
-        contents=(
+    final_plan = await asyncio.to_thread(
+        client.interactions.create,
+        model="gemini-3.1-pro-preview",
+        input=(
             f"Feature Request: {feature_request}\n\n"
             f"Subagent Reports:\n{combined_context}\n\n"
             "Synthesize a unified, step-by-step Production Implementation Plan."
         ),
-        config=types.GenerateContentConfig(
-            system_instruction="You are the Lead Staff Engineer orchestrating autonomous subagents.",
-            thinking_config=types.ThinkingConfig(thinking_budget=2048),
-            temperature=0.2,
-        ),
+        system_instruction="You are the Lead Staff Engineer orchestrating autonomous subagents.",
+        generation_config={"thinking_level": "high", "temperature": 0.2},
     )
 
     print("\n" + "=" * 76)
     print("📋 FINAL SYNTHESIZED IMPLEMENTATION PLAN")
     print("=" * 76)
-    print(final_plan.text)
+    print(final_plan.output_text)
 
 
 if __name__ == "__main__":
     asyncio.run(
         orchestrate_feature_evolution(
             "Add live competitor packaging visual comparison to the AI Product Studio Copilot "
-            "using webcam video frames + Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) side-by-side mockups."
+            "using webcam video frames + Nano Banana side-by-side mockups."
         )
     )
 ```
@@ -248,6 +252,10 @@ Parallel subagents isolate context windows so each specialist (Architecture, Sec
 - **Google Antigravity Documentation & Guides:** [https://antigravity.google/docs](https://antigravity.google/docs)
 - **Google AI Studio Workbench:** [https://aistudio.google.com](https://aistudio.google.com)
 - **Model Context Protocol (MCP) Open Specification:** [https://modelcontextprotocol.io](https://modelcontextprotocol.io)
+- **Gemini Model Catalog (verify every model ID here):** [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
+- **Interactions API Overview:** [https://ai.google.dev/gemini-api/docs/interactions-overview](https://ai.google.dev/gemini-api/docs/interactions-overview)
+- **Migrate to the Interactions API:** [https://ai.google.dev/gemini-api/docs/migrate-to-interactions](https://ai.google.dev/gemini-api/docs/migrate-to-interactions)
+- **Thinking & Reasoning (`thinking_level`):** [https://ai.google.dev/gemini-api/docs/thinking](https://ai.google.dev/gemini-api/docs/thinking)
 - **Official Python SDK (`google-genai`):** [https://github.com/googleapis/python-genai](https://github.com/googleapis/python-genai)
 - **Official TypeScript SDK (`@google/genai`):** [https://github.com/googleapis/js-genai](https://github.com/googleapis/js-genai)
 

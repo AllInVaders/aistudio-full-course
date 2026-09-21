@@ -2,16 +2,23 @@
 """
 Module 03 Lab — Stage 2 of the Flagship Project: Live Multimodal Copilot + Tool Agent
 =====================================================================================
-Demonstrates an asynchronous Python agent built on the Gemini Live API
+An asynchronous Python agent built on the Gemini Live API
 (`client.aio.live.connect(model="gemini-3.8-live", config=...)`) featuring:
-  - Real-time bidirectional streaming (text / PCM audio ready)
-  - Live Function Calling / Tool Execution (`calculate_unit_economics`,
-    `check_inventory_status`, `generate_marketing_asset`)
+  - Real-time bidirectional streaming via `session.send_realtime_input(...)`
+  - Live function calling (`calculate_unit_economics`, `check_inventory_status`,
+    `generate_marketing_asset`)
   - Graceful barge-in interruption handling (`server_content.interrupted`)
+
+Audio contract: microphone input must be raw 16-bit PCM, 16 kHz, little-endian,
+mono, streamed as `session.send_realtime_input(audio=types.Blob(...))`.
 
 Usage:
     export GEMINI_API_KEY="your-api-key"
     python live_copilot_agent.py
+
+Docs:
+    https://ai.google.dev/gemini-api/docs/live-api
+    https://ai.google.dev/gemini-api/docs/live-api/tools
 """
 
 import asyncio
@@ -19,6 +26,16 @@ from typing import Any, Dict
 
 from google import genai
 from google.genai import types
+
+# Default real-time voice/video agent model.
+LIVE_MODEL = "gemini-3.8-live"
+
+# Swap to this variant when the copilot needs to reason in the background
+# during a live voice conversation without stalling the audio stream.
+LIVE_MODEL_EXTENDED_THINKING = "gemini-3.8-live-extended-thinking"
+
+# Raw PCM contract expected by the Live API for microphone input.
+AUDIO_MIME_TYPE = "audio/pcm;rate=16000"
 
 
 # ---------------------------------------------------------------------------
@@ -64,7 +81,8 @@ def check_inventory_status(sku_code: str, warehouse_region: str = "NA-EAST") -> 
 
 
 def generate_marketing_asset(product_name: str, asset_type: str, visual_style: str) -> Dict[str, Any]:
-    """Queues an Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) / Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) studio asset generation job and returns its job manifest."""
+    """Queues a Nano Banana / Gemini Omni Flash studio asset job and returns its manifest."""
+
     job_id = f"studio-{abs(hash((product_name, asset_type, visual_style))) % 100000:05d}"
     return {
         "job_id": job_id,
@@ -126,23 +144,26 @@ async def handle_tool_calls(session: Any, tool_call: types.LiveServerToolCall) -
 
 
 async def run_live_session() -> None:
-    """Runs an interactive multi-turn Gemini Live API session with tool use and barge-in handling."""
+    """Runs an interactive multi-turn Gemini Live session with tool use and barge-in handling."""
     client = genai.Client()
-    model_id = "gemini-3.8-live"
 
     scripted_turns = [
         "Hi Copilot! Can you calculate the unit economics for AeroBrew Nano if our unit cost is $28, retail price is $99, and CAC is $24?",
         "Great! Also check warehouse inventory for SKU AEROBREW-NANO-BLK in NA-EAST and queue a hero banner asset in minimalist brushed-titanium style.",
     ]
 
-    print(f"Connecting to Gemini Live API ({model_id})...")
-    async with client.aio.live.connect(model=model_id, config=LIVE_CONFIG) as session:
+    print(f"Connecting to Gemini Live API ({LIVE_MODEL})...")
+    async with client.aio.live.connect(model=LIVE_MODEL, config=LIVE_CONFIG) as session:
         for turn_idx, user_message in enumerate(scripted_turns, start=1):
             print(f"\n[User Turn {turn_idx}]: {user_message}")
-            await session.send_client_content(
-                turns=types.Content(role="user", parts=[types.Part.from_text(text=user_message)]),
-                turn_complete=True,
-            )
+
+            # `send_realtime_input` is the streaming entry point. To drive the
+            # copilot from a real microphone instead of scripted text, capture
+            # raw 16-bit PCM at 16 kHz and stream chunks as:
+            #     await session.send_realtime_input(
+            #         audio=types.Blob(data=pcm_chunk, mime_type=AUDIO_MIME_TYPE)
+            #     )
+            await session.send_realtime_input(text=user_message)
 
             print("[Copilot]: ", end="", flush=True)
             async for response in session.receive():
