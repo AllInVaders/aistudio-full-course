@@ -37,11 +37,11 @@ Esta es la lista de modelos que usamos en **todo** el curso. Si un tutorial que 
 
 | Legado (no lo uses) | Actual (úsalo siempre) |
 | :--- | :--- |
-| `imagen-3.0-generate-002`, `client.models.generate_images()` | `gemini-3.1-flash-image` vía `client.interactions.create(...)` con `response_format={"type": "image"}` |
+| `gemini-3.1-flash-image.0-generate-002`, `client.models.generate_images()` | `gemini-3.1-flash-image` vía `client.interactions.create(...)` con `response_format={"type": "image"}` |
 | `veo-3.1-generate-preview`, `client.models.generate_videos()` | `gemini-omni-1.1-flash` vía `client.interactions.create(...)` con `response_format={"type": "video"}` |
-| `gemini-2.5-flash` como modelo por defecto | `gemini-3.8-flash` |
-| `gemini-2.5-pro` como modelo de frontera | `gemini-3.1-pro-preview` |
-| `gemini-2.0-flash-live-001` | `gemini-3.8-live` |
+| `gemini-3.8-flash` como modelo por defecto | `gemini-3.8-flash` |
+| `gemini-3.8-pro` como modelo de frontera | `gemini-3.1-pro-preview` |
+| `gemini-3.8-live` | `gemini-3.8-live` |
 | `thinking_budget=2048` (presupuesto numérico) | `generation_config={"thinking_level": "medium"}` |
 | `response_mime_type` + `response_schema` en `GenerateContentConfig` | `response_format={"type": "text", "mime_type": "application/json", "schema": MiModelo.model_json_schema()}` |
 | `client.models.generate_content()` como vía principal | `client.interactions.create()` (la vía clásica sigue funcionando) |

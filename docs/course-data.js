@@ -130,7 +130,7 @@ print(interaction.output_text)`
         summary: "Choose between Gemini 3.8 Flash and Gemini 3.1 Pro, control reasoning depth with thinking levels, enforce deterministic JSON schemas with Pydantic, generate images with Nano Banana and videos with Gemini Omni Flash, and build Stage 1 of the AI Product Studio on the Interactions API.",
         readTime: "50 min",
         labPath: "labs/module-02-prompts-media/",
-        notebookPath: "notebooks/02_Prompts_Structured_Outputs_NanoBanana_and_Omni.ipynb",
+        notebookPath: "notebooks/02_Prompts_Structured_Outputs_Gemini_Image_and_Omni_Video.ipynb",
         mdPath: "en/module-02-basics-prompts-media-llms/README.md",
         archFlow: [
           { num: "Stage 1A", title: "System Instructions", desc: "Set persistent role, tone, constraints & safety boundaries" },
@@ -608,7 +608,7 @@ print(interaction.output_text)`
         summary: "Elige entre Gemini 3.8 Flash y Gemini 3.1 Pro, controla la profundidad de razonamiento con niveles de thinking, garantiza esquemas JSON deterministas con Pydantic, genera imágenes con Nano Banana y videos con Gemini Omni Flash, y construye la Etapa 1 del Proyecto Hito sobre la Interactions API.",
         readTime: "50 min",
         labPath: "labs/module-02-prompts-media/",
-        notebookPath: "notebooks/02_Prompts_Structured_Outputs_NanoBanana_and_Omni.ipynb",
+        notebookPath: "notebooks/02_Prompts_Structured_Outputs_Gemini_Image_and_Omni_Video.ipynb",
         mdPath: "es/module-02-basics-prompts-media-llms/README.md",
         archFlow: [
           { num: "Etapa 1A", title: "System Instructions", desc: "Define rol persistente, tono, reglas y límites de seguridad" },

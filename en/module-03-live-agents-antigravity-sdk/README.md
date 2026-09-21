@@ -59,7 +59,7 @@ sequenceDiagram
 | `gemini-3.5-live-translate-preview` | Gemini 3.5 Live Translate (Preview) | Real-time speech-to-speech translation across 70+ languages. |
 
 > [!WARNING]
-> If you find a tutorial using `gemini-2.0-flash-live-001`, it is out of date. The official docs recommend updating to **Gemini 3.8 Live**.
+> If you find a tutorial using `gemini-3.8-live`, it is out of date. The official docs recommend updating to **Gemini 3.8 Live**.
 
 Unlike standard stateless HTTP calls, the **Live API** maintains a stateful, bidirectional WebSocket connection where:
 - **Multimodal Inputs Flow Continuously:** You stream microphone audio chunks, webcam or screen-share frames (`image/jpeg`), and text messages simultaneously through `session.send_realtime_input(...)`.
@@ -344,7 +344,7 @@ When `message.tool_call` arrives, your code executes each requested function cal
 <summary><strong>Question 4: Which model should you connect to for a real-time voice agent, and what exact audio format does it expect?</strong></summary>
 
 **Answer:**
-Connect to **`gemini-3.8-live`** (or `gemini-3.8-live-extended-thinking` when you need deeper background reasoning during the conversation). Input audio must be **raw 16-bit PCM at 16 kHz, little-endian**, sent via `await session.send_realtime_input(audio=types.Blob(...))`. The older `gemini-2.0-flash-live-001` model is legacy and should not be used in new projects.
+Connect to **`gemini-3.8-live`** (or `gemini-3.8-live-extended-thinking` when you need deeper background reasoning during the conversation). Input audio must be **raw 16-bit PCM at 16 kHz, little-endian**, sent via `await session.send_realtime_input(audio=types.Blob(...))`. The older `gemini-3.8-live` model is legacy and should not be used in new projects.
 </details>
 
 ---

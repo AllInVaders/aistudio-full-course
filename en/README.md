@@ -36,12 +36,12 @@ Found an older blog post or YouTube tutorial? Here is how to translate it to wha
 
 | If the old tutorial says… | Use this instead | Why |
 | :--- | :--- | :--- |
-| `imagen-3.0-generate-002`, "Imagen 3", "Imagen 4" | `gemini-3.1-flash-image` (Nano Banana 2) | The Imagen line has been retired for the Gemini API. |
+| `gemini-3.1-flash-image.0-generate-002`, "Imagen 3", "Imagen 4" | `gemini-3.1-flash-image` (Nano Banana 2) | The Imagen line has been retired for the Gemini API. |
 | `client.models.generate_images(...)` | `client.interactions.create(..., response_format={"type": "image", ...})` | Image generation now lives on the Interactions API. |
 | "Veo", `veo-3.1-generate-preview`, `client.models.generate_videos(...)` | `gemini-omni-1.1-flash` via `client.interactions.create(..., response_format={"type": "video", ...})` | Video generation moved to Gemini Omni Flash. |
-| `gemini-2.0-flash-live-001` | `gemini-3.8-live` | The 2.0 Live preview model is legacy. |
-| `gemini-2.5-flash` as the default | `gemini-3.8-flash` | Gemini 3.x is the current generation. |
-| `gemini-2.5-pro` as the frontier model | `gemini-3.1-pro-preview` | Gemini 3.x is the current generation. |
+| `gemini-3.8-live` | `gemini-3.8-live` | The 2.0 Live preview model is legacy. |
+| `gemini-3.8-flash` as the default | `gemini-3.8-flash` | Gemini 3.x is the current generation. |
+| `gemini-3.8-pro` as the frontier model | `gemini-3.1-pro-preview` | Gemini 3.x is the current generation. |
 | `thinking_budget=1024` / `ThinkingConfig(...)` | `generation_config={"thinking_level": "low" \| "medium" \| "high"}` | Gemini 3 replaced numeric budgets with simple levels. |
 | `response_mime_type` + `response_schema` | `response_format={"type": "text", "mime_type": "application/json", "schema": MyModel.model_json_schema()}` | Structured output is now expressed through `response_format`. |
 

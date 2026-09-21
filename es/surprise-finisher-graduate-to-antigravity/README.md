@@ -67,7 +67,7 @@ Crea el archivo `.agents/rules/arquitectura-genai.md` en la raíz de tu proyecto
    - Texto y agentes: `gemini-3.8-flash`. Razonamiento de frontera: `gemini-3.1-pro-preview`.
    - Imágenes: `gemini-3.1-flash-image` (o `gemini-3-pro-image` para renders hero).
    - Video: `gemini-omni-1.1-flash`. Tiempo real: `gemini-3.8-live`.
-   - RECHAZA cualquier cambio que introduzca `imagen-3.0-*`, `veo-*`, `gemini-2.x-*` o los métodos `generate_images` / `generate_videos`.
+   - RECHAZA cualquier cambio que introduzca `gemini-3.1-flash-image.0-*`, `veo-*`, `gemini-2.x-*` o los métodos `generate_images` / `generate_videos`.
 4. **Contratos de Datos Estrictos**:
    - Toda llamada que alimente una API o base de datos DEBE incluir `response_format={"type": "text", "mime_type": "application/json", "schema": ...}` y validarse con Pydantic v2 sobre `interaction.output_text`.
    - Controla el razonamiento con `generation_config={"thinking_level": ...}`. El parámetro numérico `thinking_budget` ya no existe.
@@ -95,7 +95,7 @@ Cuando el usuario solicite auditar la seguridad del proyecto o preparar un despl
 1. **Verificación del SDK**:
    - Busca en todo el repositorio cualquier aparición de `google.generativeai` y reemplázala por `from google import genai`.
 2. **Verificación de Modelos y Superficie de API**:
-   - Busca identificadores heredados (`imagen-3.0-`, `veo-`, `gemini-2.0-flash-live`, `gemini-2.5-`) y los métodos `generate_images` / `generate_videos`. Sustitúyelos por `gemini-3.1-flash-image`, `gemini-omni-1.1-flash`, `gemini-3.8-live` y `gemini-3.8-flash` a través de `client.interactions.create`.
+   - Busca identificadores heredados (`gemini-3.1-flash-image.0-`, `veo-`, `gemini-3.8-flash-live`, `gemini-3.8-`) y los métodos `generate_images` / `generate_videos`. Sustitúyelos por `gemini-3.1-flash-image`, `gemini-omni-1.1-flash`, `gemini-3.8-live` y `gemini-3.8-flash` a través de `client.interactions.create`.
    - Busca `thinking_budget` y reemplázalo por `generation_config={"thinking_level": ...}`.
 3. **Inspección de Endpoints FastAPI**:
    - Verifica que cada ruta `@app.post` limite la longitud de entrada (`max_length`) en su modelo Pydantic.

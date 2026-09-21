@@ -42,7 +42,7 @@ constant, never a string literal.
 > **Legacy migration note.** Imagen and Veo are retired. `client.models.generate_images()`
 > and `client.models.generate_videos()` no longer represent the current surface — use
 > `client.interactions.create()` with `response_format` instead. Likewise `thinking_budget`
-> was replaced by `thinking_level`, and `gemini-2.0-flash-live-001` is superseded by
+> was replaced by `thinking_level`, and `gemini-3.8-live` is superseded by
 > `gemini-3.8-live`. See https://ai.google.dev/gemini-api/docs/migrate-to-interactions
 
 ## 2. Security & Reliability Guardrails

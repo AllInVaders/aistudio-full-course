@@ -69,11 +69,11 @@ This master reference directory compiles every **verified public URL, official S
 
 | Legacy pattern | Current replacement |
 | :--- | :--- |
-| `imagen-3.0-generate-002`, "Imagen 3", "Imagen 4" | `gemini-3.1-flash-image` / `gemini-3-pro-image` (Nano Banana) |
+| `gemini-3.1-flash-image.0-generate-002`, "Imagen 3", "Imagen 4" | `gemini-3.1-flash-image` / `gemini-3-pro-image` (Nano Banana) |
 | `client.models.generate_images(...)` | `interactions.create(..., response_format={"type": "image", ...})` |
 | "Veo", `veo-3.1-generate-preview`, `client.models.generate_videos(...)` | `gemini-omni-1.1-flash` via `interactions.create(..., response_format={"type": "video", ...})` |
-| `gemini-2.0-flash-live-001` | `gemini-3.8-live` |
-| `gemini-2.5-flash` / `gemini-2.5-pro` as current models | `gemini-3.8-flash` / `gemini-3.1-pro-preview` |
+| `gemini-3.8-live` | `gemini-3.8-live` |
+| `gemini-3.8-flash` / `gemini-3.8-pro` as current models | `gemini-3.8-flash` / `gemini-3.1-pro-preview` |
 | `thinking_budget`, `ThinkingConfig(...)` | `generation_config={"thinking_level": "low"\|"medium"\|"high"}` |
 | `response_mime_type` + `response_schema` | `response_format={"type": "text", "mime_type": "application/json", "schema": ...}` |
 

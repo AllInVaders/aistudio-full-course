@@ -46,7 +46,7 @@ sequenceDiagram
 | `gemini-3.5-live-translate-preview` | Gemini 3.5 Live Translate | Traducción de voz a voz en tiempo real, más de 70 idiomas. Vista previa. |
 
 > [!WARNING]
-> **`gemini-2.0-flash-live-001` es un modelo heredado.** La documentación oficial recomienda explícitamente migrar a `gemini-3.8-live`. Si encuentras ese identificador en un tutorial o en un repositorio existente, sustitúyelo: el resto del código (`client.aio.live.connect`, el bucle `session.receive()`, el manejo de `tool_call`) no cambia.
+> **`gemini-3.8-live` es un modelo heredado.** La documentación oficial recomienda explícitamente migrar a `gemini-3.8-live`. Si encuentras ese identificador en un tutorial o en un repositorio existente, sustitúyelo: el resto del código (`client.aio.live.connect`, el bucle `session.receive()`, el manejo de `tool_call`) no cambia.
 
 ---
 
@@ -294,7 +294,7 @@ Con el código de este módulo, nuestro **AI Product Studio** ha evolucionado de
    El SDK inspecciona por reflexión las anotaciones de tipos de Python (<i>type hints</i>) y el <i>docstring</i> (descripción general y sección <code>Args:</code>) para construir automáticamente la declaración <code>FunctionDeclaration</code> compatible con OpenAPI/JSON Schema.
    </details>
 
-4. **Encuentras un tutorial que se conecta con `model="gemini-2.0-flash-live-001"`. ¿Qué haces?**
+4. **Encuentras un tutorial que se conecta con `model="gemini-3.8-live"`. ¿Qué haces?**
    <details>
    <summary>Ver respuesta correcta</summary>
    Sustituyes el identificador por <code>gemini-3.8-live</code>. Es un modelo heredado y la documentación oficial recomienda expresamente la migración. El resto del código no cambia: <code>client.aio.live.connect</code>, <code>session.send_realtime_input(...)</code>, el bucle <code>session.receive()</code> y el manejo de <code>tool_call</code> siguen siendo idénticos.

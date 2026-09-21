@@ -25,10 +25,10 @@ Antes de escribir una sola línea de código, memoriza esta tabla. Es la que usa
 
 | Legado (no lo uses) | Actual (úsalo siempre) |
 | :--- | :--- |
-| `imagen-3.0-generate-002`, `client.models.generate_images()` | `gemini-3.1-flash-image` con `client.interactions.create(... response_format={"type": "image"})` |
+| `gemini-3.1-flash-image.0-generate-002`, `client.models.generate_images()` | `gemini-3.1-flash-image` con `client.interactions.create(... response_format={"type": "image"})` |
 | `veo-3.1-generate-preview`, `client.models.generate_videos()` | `gemini-omni-1.1-flash` con `client.interactions.create(... response_format={"type": "video"})` |
 | Sondeo de operaciones (`while not operation.done`) para video | La interacción devuelve el video directamente en `interaction.output_video.data` |
-| `gemini-2.5-flash` / `gemini-2.5-pro` | `gemini-3.8-flash` / `gemini-3.1-pro-preview` |
+| `gemini-3.8-flash` / `gemini-3.8-pro` | `gemini-3.8-flash` / `gemini-3.1-pro-preview` |
 | `thinking_config=types.ThinkingConfig(thinking_budget=2048)` | `generation_config={"thinking_level": "medium"}` |
 | `response_mime_type` + `response_schema` en `GenerateContentConfig` | `response_format={"type": "text", "mime_type": "application/json", "schema": MiModelo.model_json_schema()}` |
 

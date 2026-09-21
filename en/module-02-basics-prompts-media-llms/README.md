@@ -25,10 +25,10 @@ In this module, we build **Stage 1 of our Flagship Milestone Project: The AI Pro
 
 | If an old tutorial says… | Use this instead |
 | :--- | :--- |
-| `imagen-3.0-generate-002`, "Imagen 3", "Imagen 4" | `gemini-3.1-flash-image` (Nano Banana 2) |
+| `gemini-3.1-flash-image.0-generate-002`, "Imagen 3", "Imagen 4" | `gemini-3.1-flash-image` (Nano Banana 2) |
 | `client.models.generate_images(...)` | `client.interactions.create(..., response_format={"type": "image", ...})` |
 | "Veo", `veo-3.1-generate-preview`, `client.models.generate_videos(...)` | `gemini-omni-1.1-flash` via `client.interactions.create(..., response_format={"type": "video", ...})` |
-| `gemini-2.5-flash` / `gemini-2.5-pro` as current models | `gemini-3.8-flash` / `gemini-3.1-pro-preview` |
+| `gemini-3.8-flash` / `gemini-3.8-pro` as current models | `gemini-3.8-flash` / `gemini-3.1-pro-preview` |
 | `thinking_budget=1024`, `ThinkingConfig(...)` | `generation_config={"thinking_level": "low" \| "medium" \| "high"}` |
 | `response_mime_type` + `response_schema` | `response_format={"type": "text", "mime_type": "application/json", "schema": MyModel.model_json_schema()}` |
 
