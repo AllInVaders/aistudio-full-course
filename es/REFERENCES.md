@@ -28,13 +28,13 @@ Todos los enlaces contenidos en este directorio apuntan exclusivamente a documen
 
 ## 3. Modelos Gemini, Razonamiento y Capacidades Multimodales
 
-- **Catálogo Oficial de Modelos Gemini (Gemini 2.5 Pro, Flash y Live)**: [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
+- **Catálogo Oficial de Modelos Gemini (Gemini 3.1 Pro, Flash y Live)**: [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
 - **Razonamiento Híbrido y Presupuesto de Pensamiento (`thinking_config`)**: [https://ai.google.dev/gemini-api/docs/thinking](https://ai.google.dev/gemini-api/docs/thinking)
 - **Salidas Estructuradas (Structured Outputs con JSON Schema y Pydantic)**: [https://ai.google.dev/gemini-api/docs/structured-output](https://ai.google.dev/gemini-api/docs/structured-output)
 - **Llamada a Funciones y Herramientas (Function Calling / Tool Use)**: [https://ai.google.dev/gemini-api/docs/function-calling](https://ai.google.dev/gemini-api/docs/function-calling)
 - **Gemini Live API (Streaming Bidireccional WebSocket de Audio y Video)**: [https://ai.google.dev/gemini-api/docs/live](https://ai.google.dev/gemini-api/docs/live)
-- **Generación de Imágenes con Imagen 3 (`generate_images`)**: [https://ai.google.dev/gemini-api/docs/imagen](https://ai.google.dev/gemini-api/docs/imagen)
-- **Generación de Video con Veo (`generate_videos`)**: [https://ai.google.dev/gemini-api/docs/video](https://ai.google.dev/gemini-api/docs/video)
+- **Generación de Imágenes con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) (`generate_images`)**: [https://ai.google.dev/gemini-api/docs/image-generation](https://ai.google.dev/gemini-api/docs/image-generation)
+- **Generación de Video con Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (`generate_videos`)**: [https://ai.google.dev/gemini-api/docs/video](https://ai.google.dev/gemini-api/docs/video)
 
 ---
 

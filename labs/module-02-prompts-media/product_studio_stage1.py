@@ -5,8 +5,8 @@ Module 02 Lab — Stage 1 of the Flagship Project: AI Product Studio Creative En
 Demonstrates how to combine:
   1. System Instructions + Thinking Budget (`types.ThinkingConfig`)
   2. Strict Pydantic Structured Outputs (`response_schema=ProductLaunchKit`)
-  3. Photorealistic Product Hero Generation with Imagen 3 (`client.models.generate_images`)
-  4. Cinematic Motion Teaser Generation with Veo (`client.models.generate_videos`)
+  3. Photorealistic Product Hero Generation with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) (`client.models.generate_content`)
+  4. Cinematic Motion Teaser Generation with Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (`client.interactions.create`)
 
 Usage:
     export GEMINI_API_KEY="your-api-key"
@@ -49,10 +49,10 @@ class ProductLaunchKit(BaseModel):
     positioning_statement: str = Field(description="Clear value proposition and category differentiation.")
     target_persona: PersonaProfile
     imagen_hero_prompt: str = Field(
-        description="Detailed studio photography prompt for Imagen 3 including lighting, lens, materials, and color palette."
+        description="Detailed studio photography prompt for Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) including lighting, lens, materials, and color palette."
     )
     veo_teaser_prompt: str = Field(
-        description="Cinematic 5-second motion shot prompt for Veo describing camera movement, subject action, and lighting."
+        description="Cinematic 5-second motion shot prompt for Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) describing camera movement, subject action, and lighting."
     )
     ad_campaigns: List[ChannelAdCopy] = Field(description="Bilingual campaign copy across 3 channels.")
 
@@ -61,7 +61,7 @@ SYSTEM_INSTRUCTION = """
 You are the Executive Creative Director & Chief Product Strategist at an award-winning
 AI Product Studio. Given a raw product concept, you craft complete, commercially grounded,
 bilingual (English + Spanish) launch kits with studio-grade visual prompts engineered
-specifically for Imagen 3 and Veo.
+specifically for Gemini 3.1 Flash Image (Nano Banana 2) and Gemini Omni 1.1 Flash.
 """.strip()
 
 
@@ -69,9 +69,9 @@ specifically for Imagen 3 and Veo.
 # 2. Core Generation Pipeline
 # ---------------------------------------------------------------------------
 def generate_launch_kit(client: genai.Client, concept: str) -> ProductLaunchKit:
-    """Generates a strictly typed bilingual ProductLaunchKit JSON object using Gemini 2.5 Flash."""
+    """Generates a strictly typed bilingual ProductLaunchKit JSON object using Gemini 3.7 Flash."""
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents=f"Create a complete bilingual launch kit for this product concept:\n\n{concept}",
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
@@ -85,9 +85,9 @@ def generate_launch_kit(client: genai.Client, concept: str) -> ProductLaunchKit:
 
 
 def generate_hero_image(client: genai.Client, prompt: str, output_path: Path) -> Path:
-    """Generates a high-resolution studio product hero image with Imagen 3."""
-    result = client.models.generate_images(
-        model="imagen-3.0-generate-002",
+    """Generates a high-resolution studio product hero image with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)."""
+    result = client.models.generate_content(
+        model="gemini-3.1-flash-image",
         prompt=prompt,
         config=types.GenerateImagesConfig(
             number_of_images=1,
@@ -102,20 +102,20 @@ def generate_hero_image(client: genai.Client, prompt: str, output_path: Path) ->
 
 
 def generate_veo_teaser(client: genai.Client, prompt: str, output_path: Path) -> Path:
-    """Starts an asynchronous Veo video generation job and polls until completion."""
-    operation = client.models.generate_videos(
-        model="veo-2.0-generate-001",
+    """Starts an asynchronous Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) video generation job and polls until completion."""
+    operation = client.interactions.create(
+        model="gemini-omni-1.1-flash",
         prompt=prompt,
         config=types.GenerateVideosConfig(
             aspect_ratio="16:9",
             person_generation="allow_adult",
         ),
     )
-    print("  [Veo] Video generation operation submitted. Polling status...")
+    print("  [Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)] Video generation operation submitted. Polling status...")
     while not operation.done:
         time.sleep(10)
         operation = client.operations.get(operation)
-        print("  [Veo] Still rendering frames...")
+        print("  [Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)] Still rendering frames...")
 
     generated_video = operation.response.generated_videos[0]
     client.files.download(file=generated_video.video)
@@ -133,12 +133,12 @@ def main() -> None:
     parser.add_argument(
         "--out-dir",
         default="./output_stage1",
-        help="Directory to write JSON launch kit, Imagen 3 hero image, and Veo video.",
+        help="Directory to write JSON launch kit, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) hero image, and Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) video.",
     )
     parser.add_argument(
         "--skip-video",
         action="store_true",
-        help="Skip Veo video generation (useful for quick local smoke tests).",
+        help="Skip Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) video generation (useful for quick local smoke tests).",
     )
     args = parser.parse_args()
 
@@ -155,16 +155,16 @@ def main() -> None:
     print(f"  -> EN Tagline: {kit.tagline_en}")
     print(f"  -> ES Tagline: {kit.tagline_es}")
 
-    print("\n[2/3] Generating Studio Hero Image with Imagen 3...")
+    print("\n[2/3] Generating Studio Hero Image with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)...")
     hero_path = generate_hero_image(client, kit.imagen_hero_prompt, out_dir / "hero_shot.jpg")
-    print(f"  -> Saved Imagen 3 hero shot to {hero_path}")
+    print(f"  -> Saved Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) hero shot to {hero_path}")
 
     if args.skip_video:
-        print("\n[3/3] Skipped Veo video generation (--skip-video enabled).")
+        print("\n[3/3] Skipped Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) video generation (--skip-video enabled).")
     else:
-        print("\n[3/3] Generating Cinematic Promo Clip with Veo...")
+        print("\n[3/3] Generating Cinematic Promo Clip with Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)...")
         video_path = generate_veo_teaser(client, kit.veo_teaser_prompt, out_dir / "promo_teaser.mp4")
-        print(f"  -> Saved Veo promo teaser to {video_path}")
+        print(f"  -> Saved Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) promo teaser to {video_path}")
 
 
 if __name__ == "__main__":

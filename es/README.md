@@ -28,9 +28,9 @@ flowchart LR
     end
 
     subgraph Gemini["Modelos Google Gen AI (SDK google-genai)"]
-        FLASH["Gemini 2.5 Flash (Baja Latencia + Thinking Budget)"]
-        PRO["Gemini 2.5 Pro (Razonamiento Complejo + JSON Schema)"]
-        MEDIA["Imagen 3 & Veo (Generación Visual y Video)"]
+        FLASH["Gemini 3.7 Flash (Baja Latencia + Thinking Budget)"]
+        PRO["Gemini 3.1 Pro (Razonamiento Complejo + JSON Schema)"]
+        MEDIA["Gemini 3.1 Flash Image (Nano Banana 2) & Gemini Omni 1.1 Flash (Generación Visual y Video)"]
         LIVE["Gemini Live API (Audio/Video Bidireccional + VAD)"]
     end
 
@@ -55,7 +55,7 @@ flowchart LR
 | Módulo | Título y Enfoque Técnico | Hito del Proyecto (Flagship Milestone) |
 | :--- | :--- | :--- |
 | **[Módulo 1](./module-01-setup-iam-billing/README.md)** | **Configuración e Introducción, Permisos IAM, Facturación, Usuarios y Panel de Control** | Configuración del entorno, comparativa AI Studio vs. Vertex AI, cuotas RPM/TPM/RPD, roles IAM de mínimo privilegio (`roles/aiplatform.user`, `roles/secretmanager.secretAccessor`, `roles/run.invoker`) y alertas de presupuesto. |
-| **[Módulo 2](./module-02-basics-prompts-media-llms/README.md)** | **Fundamentos, Prompts, Instrucciones del Sistema, Generación Multimedia y Modelos de Lenguaje** | **Etapa 1 del Proyecto Hito**: Motor Creativo de *AI Product Studio* con Gemini 2.5 Flash/Pro, `thinking_config`, salidas estructuradas con Pydantic/Zod, Imagen 3 y Veo. |
+| **[Módulo 2](./module-02-basics-prompts-media-llms/README.md)** | **Fundamentos, Prompts, Instrucciones del Sistema, Generación Multimedia y Modelos de Lenguaje** | **Etapa 1 del Proyecto Hito**: Motor Creativo de *AI Product Studio* con Gemini 3.7 Flash/Pro, `thinking_config`, salidas estructuradas con Pydantic/Zod, Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash. |
 | **[Módulo 3](./module-03-live-agents-antigravity-sdk/README.md)** | **Modelos en Vivo (Live API), Agentes, Antigravity SDK y Aplicaciones** | **Etapa 2 del Proyecto Hito**: Copiloto Multimodal en Vivo con streaming WebSocket bidireccional (`client.aio.live.connect`), interrupciones de voz (*barge-in*), Function Calling y el SDK público de Google Antigravity (`antigravity.google`). |
 | **[Módulo 4](./module-04-deploy-github-cloudrun-security/README.md)** | **Despliegue a Producción, Integración con GitHub, Cloud Run, Seguridad en tu App y Proyecto Hito** | **Etapa 3 del Proyecto Hito**: Contenedorización Docker, CI/CD con GitHub Actions + Workload Identity Federation (`google-github-actions/auth@v2`), Secret Manager, defensa contra inyección de prompts y despliegue en Cloud Run. |
 | **[Cierre Sorpresa](./surprise-finisher-graduate-to-antigravity/README.md)** | **Graduación hacia Google Antigravity (`antigravity.google`)** | El salto de paradigma: de invocar APIs en scripts a orquestar agentes autónomos de ingeniería con `.agents/rules/`, `SKILL.md`, servidores MCP y subagentes paralelos. |
@@ -85,7 +85,7 @@ Para aprovechar al máximo todos los laboratorios de este curso, asegúrate de c
 > - **Python**: `pip install google-genai` (`from google import genai`)
 > - **TypeScript / JavaScript**: `npm install @google/genai` (`import { GoogleGenAI } from '@google/genai'`)
 >
-> **NUNCA utilices el paquete heredado y obsoleto `google-generativeai`**. El nuevo SDK `google-genai` te permite cambiar entre llaves de API de Google AI Studio y autenticación empresarial de Vertex AI con una sola línea de configuración, y da acceso exclusivo a Gemini 2.5, Live API, Imagen 3 y Veo.
+> **NUNCA utilices el paquete heredado y obsoleto `google-generativeai`**. El nuevo SDK `google-genai` te permite cambiar entre llaves de API de Google AI Studio y autenticación empresarial de Vertex AI con una sola línea de configuración, y da acceso exclusivo a Gemini 3.7 / 3.1, Live API, Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash.
 
 ### Verificación Rápida de Instalación (30 Segundos)
 

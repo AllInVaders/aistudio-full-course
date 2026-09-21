@@ -5,11 +5,11 @@
 ## 1. SDK & Model Mandates
 - **Unified SDK Only**: All Python code must use `google-genai` (`from google import genai`, `from google.genai import types`). Never import legacy `google-generativeai` or `vertexai.preview` modules.
 - **Model Selection**:
-  - Fast structured reasoning & JSON schema generation: `gemini-2.5-flash`
-  - Complex multi-step architectural reasoning: `gemini-2.5-pro`
-  - Photorealistic product imagery: `imagen-3.0-generate-002`
-  - Cinematic product motion teasers: `veo-2.0-generate-001`
-  - Low-latency bidirectional voice/text + tool calling: `gemini-2.0-flash-live-001`
+  - Fast structured reasoning & JSON schema generation: `gemini-3.7-flash`
+  - Complex multi-step architectural reasoning: `gemini-3.1-pro`
+  - Photorealistic product imagery: `gemini-3.1-flash-image`
+  - Cinematic product motion teasers: `gemini-omni-1.1-flash`
+  - Low-latency bidirectional voice/text + tool calling: `gemini-3.8-live`
 
 ## 2. Security & Reliability Guardrails
 - Every user-supplied text input MUST pass through `sanitize_and_validate_prompt()` before being sent to any model endpoint.

@@ -27,7 +27,7 @@ sequenceDiagram
     participant User as 🎙️ User (Mic + Camera + Screen)
     participant App as ⚡ Async Copilot Session (Python / TS)
     participant LiveAPI as 🧠 Gemini Live API (WSS Full-Duplex)
-    participant Tools as 🛠️ Product Studio Tools (Pricing, Specs, Imagen 3)
+    participant Tools as 🛠️ Product Studio Tools (Pricing, Specs, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2))
 
     User->>App: Streams 16kHz PCM Audio & 1 FPS JPEG Frames
     App->>LiveAPI: session.send_realtime_input(audio=..., video=...)
@@ -139,7 +139,7 @@ def calculate_bom_and_margin(
 
 
 def trigger_hero_render_job(product_name: str, visual_style: str) -> Dict[str, str]:
-    """Queues an Imagen 3 studio render job for the active product design session.
+    """Queues an Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) studio render job for the active product design session.
 
     Args:
         product_name: Name of the product concept.
@@ -182,7 +182,7 @@ async def run_live_product_copilot() -> None:
 
     print("🎙️ Connecting to Gemini Live API Full-Duplex Session...")
     async with client.aio.live.connect(
-        model="gemini-2.0-flash-live-001",
+        model="gemini-3.8-live",
         config=live_config,
     ) as session:
         print("✅ Connected! Sending live founder prompt...")
@@ -256,7 +256,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function startLiveCopilotSession() {
   const session = await ai.live.connect({
-    model: "gemini-2.0-flash-live-001",
+    model: "gemini-3.8-live",
     config: {
       responseModalities: [Modality.TEXT],
       systemInstruction:
@@ -297,7 +297,7 @@ startLiveCopilotSession().catch(console.error);
 ## 🧩 Connection to the Flagship Milestone Project
 
 We now have **both core engines** of our Flagship Milestone Project:
-1. **Stage 1 (`stage1_creative_engine.py`)**: High-precision structured specification synthesis + Imagen 3 + Veo media generation.
+1. **Stage 1 (`stage1_creative_engine.py`)**: High-precision structured specification synthesis + Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) + Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) media generation.
 2. **Stage 2 (`stage2_live_copilot_agent.py`)**: Full-duplex real-time Gemini Live API streaming + autonomous tool execution.
 
 In **Module 04**, we will wrap Stage 1 and Stage 2 inside a hardened **FastAPI + WebSocket server**, containerize it with **Docker**, wire automated zero-secret CI/CD via **GitHub Actions + Workload Identity Federation**, add defense-in-depth **App Security**, and deploy it live to **Google Cloud Run**!
@@ -324,7 +324,7 @@ When `message.tool_call` arrives, your code executes each requested function cal
 <summary><strong>Question 3: How does Google Antigravity (`https://antigravity.google`) complement Google AI Studio?</strong></summary>
 
 **Answer:**
-**Google AI Studio** is the developer workbench for prototyping prompts, testing Gemini/Imagen/Veo endpoints, and managing API keys. **Google Antigravity** (`https://antigravity.google`) is Google's agent-first development platform and SDK harness that orchestrates autonomous multi-step coding, workspace rules (`.agents/rules/`), reusable skills (`SKILL.md`), MCP tools, and parallel subagents across full codebases.
+**Google AI Studio** is the developer workbench for prototyping prompts, testing Gemini 3.x / Gemini Image / Gemini Omni endpoints, and managing API keys. **Google Antigravity** (`https://antigravity.google`) is Google's agent-first development platform and SDK harness that orchestrates autonomous multi-step coding, workspace rules (`.agents/rules/`), reusable skills (`SKILL.md`), MCP tools, and parallel subagents across full codebases.
 </details>
 
 ---

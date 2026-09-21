@@ -2,7 +2,7 @@
  * Module 01 Lab: Environment Setup, Model Discovery & Token Economics Verification (ESM)
  * ======================================================================================
  * Verifies GEMINI_API_KEY / Vertex AI credentials using the official `@google/genai` SDK,
- * discovers available Gemini, Imagen 3, and Veo models, runs a `countTokens` preflight check,
+ * discovers available Gemini, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), and Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) models, runs a `countTokens` preflight check,
  * and prints a diagnostic health table.
  *
  * Usage:
@@ -35,8 +35,8 @@ function detectAuthMode() {
 async function discoverModels(ai) {
   const families = {
     'Gemini (Text / Multimodal / Live)': [],
-    'Imagen (Image Generation)': [],
-    'Veo (Video Generation)': [],
+    'Gemini Image (Image Generation)': [],
+    'Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (Video Generation)': [],
     Embeddings: [],
   };
 
@@ -45,9 +45,9 @@ async function discoverModels(ai) {
     const name = (model.name || '').replace(/^models\//, '');
     const lower = name.toLowerCase();
     if (lower.includes('imagen')) {
-      families['Imagen (Image Generation)'].push(name);
+      families['Gemini Image (Image Generation)'].push(name);
     } else if (lower.includes('veo')) {
-      families['Veo (Video Generation)'].push(name);
+      families['Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (Video Generation)'].push(name);
     } else if (lower.includes('embedding')) {
       families.Embeddings.push(name);
     } else if (lower.includes('gemini')) {
@@ -57,7 +57,7 @@ async function discoverModels(ai) {
   return families;
 }
 
-async function runTokenCheck(ai, model = 'gemini-2.5-flash') {
+async function runTokenCheck(ai, model = 'gemini-3.7-flash') {
   const samplePrompt =
     'You are an AI Product Studio strategist. Summarize the three pillars of a ' +
     'high-converting product launch brief (Positioning, Visual Identity, Unit Economics) ' +
@@ -114,7 +114,7 @@ async function main() {
     console.log(`    - ${family.padEnd(34)}: ${String(models.length).padStart(2)} models | ${sample}${extra}`);
   }
   console.log('-'.repeat(78));
-  console.log('  TOKEN ECONOMICS & LATENCY CHECK (gemini-2.5-flash)');
+  console.log('  TOKEN ECONOMICS & LATENCY CHECK (gemini-3.7-flash)');
   console.log(`    - Preflight countTokens()    : ${metrics.preflightTokens} tokens`);
   console.log(`    - Actual Prompt Tokens       : ${metrics.promptTokens} tokens`);
   console.log(`    - Output Candidate Tokens    : ${metrics.outputTokens} tokens`);

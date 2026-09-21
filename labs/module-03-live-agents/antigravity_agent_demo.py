@@ -49,7 +49,7 @@ class SubagentHarness:
     name: str
     role_prompt: str
     tools: List[Callable] = field(default_factory=list)
-    model_id: str = "gemini-2.5-flash"
+    model_id: str = "gemini-3.7-flash"
 
     def run(self, client: genai.Client, objective: str) -> str:
         response = client.models.generate_content(
@@ -88,7 +88,7 @@ def orchestrate_product_launch_mission(product_brief: str) -> FinalSynthesisRepo
     # 1. Planner step: generate a structured execution plan
     print("[Orchestrator] Planning multi-agent mission...")
     plan_resp = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents=f"Decompose this product launch evaluation into specialist tasks:\n\n{product_brief}",
         config=types.GenerateContentConfig(
             system_instruction=(
@@ -133,7 +133,7 @@ def orchestrate_product_launch_mission(product_brief: str) -> FinalSynthesisRepo
     # 4. Synthesize final bilingual executive decision report
     print("\n[Orchestrator] Synthesizing verified bilingual Go-To-Market report...")
     synthesis_resp = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents="\n\n".join(scratchpad),
         config=types.GenerateContentConfig(
             system_instruction=(

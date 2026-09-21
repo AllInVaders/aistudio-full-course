@@ -13,7 +13,7 @@ Observa la evolución que has recorrido a lo largo de este curso:
 ```mermaid
 flowchart LR
     subgraph Nivel1["Nivel 1: Scripts y Prompts (Módulos 1 y 2)"]
-        P1["Tú escribes el prompt -> Gemini devuelve JSON / Imagen / Video"]
+        P1["Tú escribes el prompt -> Gemini devuelve JSON / Gemini Image (`gemini-3.1-flash-image`) / Video"]
     end
 
     subgraph Nivel2["Nivel 2: Copilotos en Tiempo Real (Módulos 3 y 4)"]

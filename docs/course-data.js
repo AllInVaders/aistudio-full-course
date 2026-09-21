@@ -43,7 +43,7 @@ window.COURSE_DATA = {
           {
             heading: "1. Google AI Studio vs. Vertex AI: When to Use Which",
             body: [
-              "Google AI Studio (aistudio.google.com) is the fastest developer on-ramp to Gemini, Imagen, and Veo models. You can generate an API key in seconds and start building immediately with the unified Google Gen AI SDK (`google-genai`).",
+              "Google AI Studio (aistudio.google.com) is the fastest developer on-ramp to Gemini 3.x, Gemini 3.1 Flash Image (Nano Banana 2), and Gemini Omni 1.1 Flash models. You can generate an API key in seconds and start building immediately with the unified Google Gen AI SDK (`google-genai`).",
               "Because the `google-genai` SDK uses the exact same code surface for both Google AI Studio API keys and Google Cloud Vertex AI credentials, you never have to rewrite your application code when scaling from prototype to enterprise production."
             ],
             bullets: [
@@ -80,14 +80,14 @@ prompt = "Explain the difference between RPM, TPM, and RPD in 3 bullet points."
 
 # 1. Pre-flight token count check (crucial for FinOps & quota budgeting)
 token_info = client.models.count_tokens(
-    model="gemini-2.5-flash",
+    model="gemini-3.7-flash",
     contents=prompt,
 )
 print(f"Input Token Count: {token_info.total_tokens}")
 
 # 2. Generate content and inspect usage metadata
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.7-flash",
     contents=prompt,
 )
 print(response.text)
@@ -117,34 +117,34 @@ print("Usage Metadata:", response.usage_metadata)`
         tag: "Module 02",
         title: "Basics, Prompts, System Instructions, Media Generation & Language Models",
         eyebrow: "Module 02 · Multimodal & Structured Generation",
-        summary: "Choose between Gemini 2.5 Flash and Gemini 2.5 Pro, control reasoning depth with Thinking Budgets, enforce deterministic JSON schemas with Pydantic, generate images with Imagen 3 and videos with Veo, and build Stage 1 of the AI Product Studio.",
+        summary: "Choose between Gemini 3.7 Flash and Gemini 3.1 Pro, control reasoning depth with Thinking Budgets, enforce deterministic JSON schemas with Pydantic, generate images with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) and videos with Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`), and build Stage 1 of the AI Product Studio.",
         readTime: "50 min",
         labPath: "labs/module-02-prompts-media/",
-        notebookPath: "notebooks/02_Prompts_Structured_Outputs_Imagen3_and_Veo.ipynb",
+        notebookPath: "notebooks/02_Prompts_Structured_Outputs_Gemini_Image_and_Omni_Video.ipynb",
         mdPath: "en/module-02-basics-prompts-media-llms/README.md",
         archFlow: [
           { num: "Stage 1A", title: "System Instructions", desc: "Set persistent role, tone, constraints & safety boundaries" },
-          { num: "Stage 1B", title: "Thinking & JSON Schema", desc: "Gemini 2.5 reasoning + Pydantic structured output validation" },
-          { num: "Stage 1C", title: "Imagen 3 Studio", desc: "Photorealistic hero product renders via client.models.generate_images" },
-          { num: "Stage 1D", title: "Veo Video Engine", desc: "Cinematic product promo clips via client.models.generate_videos" }
+          { num: "Stage 1B", title: "Thinking & JSON Schema", desc: "Gemini 3.7 / 3.1 reasoning + Pydantic structured output validation" },
+          { num: "Stage 1C", title: "Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Studio", desc: "Photorealistic hero product renders via client.models.generate_content" },
+          { num: "Stage 1D", title: "Gemini Omni 1.1 Flash Video Engine", desc: "Cinematic product promo clips via client.interactions.create" }
         ],
         sections: [
           {
             heading: "1. Language Models, System Instructions & Thinking Budgets",
             body: [
-              "Gemini 2.5 models feature built-in reasoning ('Thinking'). You can explicitly tune `thinking_config` to trade latency/cost for deeper analytical reasoning.",
+              "Gemini 3.x models (`gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-3.1-pro`) feature built-in reasoning ('Thinking'). You can explicitly tune `thinking_config` to trade latency/cost for deeper analytical reasoning.",
               "Always separate persistent behavioral instructions (`system_instruction`) from per-request user inputs (`contents`). This improves adherence and strengthens prompt injection defenses."
             ],
             bullets: [
-              "<strong>gemini-2.5-flash:</strong> Default workhorse for high-throughput, low-latency multimodal tasks, structured extraction, and real-time agents.",
-              "<strong>gemini-2.5-pro:</strong> Best for complex coding, deep architectural synthesis, and multi-document reasoning.",
+              "<strong>gemini-3.7-flash:</strong> Default workhorse for high-throughput, low-latency multimodal tasks, structured extraction, and real-time agents.",
+              "<strong>gemini-3.1-pro:</strong> Best for complex coding, deep architectural synthesis, and multi-document reasoning.",
               "<strong>Structured Outputs:</strong> Pass a Pydantic class to `response_schema` with `response_mime_type='application/json'` to guarantee 100% schema-compliant JSON."
             ]
           },
           {
-            heading: "2. Multimodal Media Generation: Imagen 3 & Veo",
+            heading: "2. Multimodal Media Generation: Gemini 3.1 Flash Image (Nano Banana 2) & Gemini Omni 1.1 Flash",
             body: [
-              "With the unified `google-genai` client, generating high-resolution product images (Imagen 3) and cinematic video clips (Veo) uses the exact same SDK client as text generation."
+              "With the unified `google-genai` client, generating high-resolution product images (Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)) and cinematic video clips (Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)) uses the exact same SDK client as text generation."
             ],
             codeTitle: "labs/module-02-prompts-media/product_studio_stage1.py",
             code: `from pydantic import BaseModel, Field
@@ -158,12 +158,12 @@ class ProductLaunchKit(BaseModel):
     tagline: str
     target_audience: str
     key_features: list[str]
-    imagen_prompt: str = Field(description="Detailed visual prompt for Imagen 3")
-    veo_video_prompt: str = Field(description="Cinematic motion prompt for Veo")
+    image_prompt: str = Field(description="Detailed visual prompt for Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)")
+    omni_video_prompt: str = Field(description="Cinematic motion prompt for Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)")
 
 # 1. Generate Structured Product Brief with System Instructions & Thinking
 brief_resp = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.7-flash",
     contents="Create a launch kit for a solar-powered smart espresso mug.",
     config=types.GenerateContentConfig(
         system_instruction="You are an expert industrial designer and brand director.",
@@ -175,11 +175,14 @@ brief_resp = client.models.generate_content(
 kit = ProductLaunchKit.model_validate_json(brief_resp.text)
 print("Generated Launch Kit:", kit.model_dump_json(indent=2))
 
-# 2. Generate Product Hero Image with Imagen 3
-img_resp = client.models.generate_images(
-    model="imagen-3.0-generate-002",
-    prompt=kit.imagen_prompt,
-    config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="16:9"),
+# 2. Generate Product Hero Image with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)
+img_resp = client.models.generate_content(
+    model="gemini-3.1-flash-image",
+    contents=kit.image_prompt,
+    config=types.GenerateContentConfig(
+        response_modalities=["IMAGE"],
+        image_config=types.ImageConfig(aspect_ratio="16:9"),
+    ),
 )`
           }
         ],
@@ -189,7 +192,7 @@ img_resp = client.models.generate_images(
             "Write 'PLEASE ONLY RETURN JSON' in all caps inside the user prompt.",
             "Set response_mime_type='application/json' and pass a Pydantic model or JSON Schema to response_schema in GenerateContentConfig.",
             "Use temperature=2.0 so the model explores more formatting styles.",
-            "JSON output is only supported in Imagen 3."
+            "JSON output is only supported in Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)."
           ],
           correctIndex: 1,
           explanation: "Correct! Setting `response_mime_type='application/json'` together with `response_schema=YourPydanticModel` enforces constrained decoding so the output always conforms to your schema."
@@ -197,8 +200,8 @@ img_resp = client.models.generate_images(
         references: [
           { title: "Structured Outputs Guide", desc: "Enforcing JSON schemas and Pydantic models in Gemini API", url: "https://ai.google.dev/gemini-api/docs/structured-output" },
           { title: "Gemini Thinking Models Guide", desc: "Configuring thinking budgets and reasoning tokens", url: "https://ai.google.dev/gemini-api/docs/thinking" },
-          { title: "Imagen 3 Image Generation", desc: "Generating and customizing images with google-genai", url: "https://ai.google.dev/gemini-api/docs/imagen" },
-          { title: "Veo Video Generation Guide", desc: "Generating high-definition video clips from text and images", url: "https://ai.google.dev/gemini-api/docs/video" }
+          { title: "Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Image Generation", desc: "Generating and customizing images with google-genai", url: "https://ai.google.dev/gemini-api/docs/image-generation" },
+          { title: "Gemini Omni 1.1 Flash Video Generation Guide", desc: "Generating high-definition video clips from text and images", url: "https://ai.google.dev/gemini-api/docs/video" }
         ]
       },
       {
@@ -249,7 +252,7 @@ async def run_live_copilot_session():
         system_instruction="You are the Live Product Studio Copilot. Use tools whenever pricing is discussed.",
         tools=[calculate_unit_economics],
     )
-    async with client.aio.live.connect(model="gemini-2.0-flash-live-001", config=config) as session:
+    async with client.aio.live.connect(model="gemini-3.8-live", config=config) as session:
         await session.send(
             input="If our solar mug costs $18 to manufacture and sells for $65 across 5,000 units, what is our margin?",
             end_of_turn=True,
@@ -381,7 +384,7 @@ jobs:
           {
             heading: "1. The Graduation Paradigm Shift: From API Caller to Agent Orchestrator",
             body: [
-              "In Modules 1–4, you learned how to embed Gemini, Imagen 3, Veo, and the Live API inside your application code. In the Surprise Finisher, you flip the perspective: you graduate to Google Antigravity (antigravity.google), where autonomous AI agents pair-program with you across your entire repository, terminal, browser, and cloud infrastructure.",
+              "In Modules 1–4, you learned how to embed Gemini, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`), and the Live API inside your application code. In the Surprise Finisher, you flip the perspective: you graduate to Google Antigravity (antigravity.google), where autonomous AI agents pair-program with you across your entire repository, terminal, browser, and cloud infrastructure.",
               "Because Antigravity connects directly to your Google AI Studio API keys and Google Cloud projects, everything you configured in Modules 1–4 carries over immediately."
             ],
             bullets: [
@@ -472,7 +475,7 @@ description: Run automated health checks, schema verification, and Cloud Run dep
           {
             heading: "1. Google AI Studio vs. Vertex AI: Cuándo Usar Cada Uno",
             body: [
-              "Google AI Studio (aistudio.google.com) es la vía más rápida para que desarrolladores construyan con modelos Gemini, Imagen y Veo. Puedes generar una API Key en segundos y programar de inmediato con el SDK oficial unificado (`google-genai`).",
+              "Google AI Studio (aistudio.google.com) es la vía más rápida para que desarrolladores construyan con modelos Gemini 3.x, Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash. Puedes generar una API Key en segundos y programar de inmediato con el SDK oficial unificado (`google-genai`).",
               "Dado que el SDK `google-genai` utiliza exactamente la misma interfaz de código tanto para API Keys de Google AI Studio como para credenciales empresariales de Vertex AI, nunca tendrás que reescribir tu aplicación al escalar a producción."
             ],
             bullets: [
@@ -509,14 +512,14 @@ prompt = "Explica la diferencia entre RPM, TPM y RPD en 3 viñetas claras."
 
 # 1. Conteo previo de tokens (esencial para FinOps y control de cuotas)
 token_info = client.models.count_tokens(
-    model="gemini-2.5-flash",
+    model="gemini-3.7-flash",
     contents=prompt,
 )
 print(f"Tokens de entrada: {token_info.total_tokens}")
 
 # 2. Generación de contenido e inspección de metadatos de uso
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.7-flash",
     contents=prompt,
 )
 print(response.text)
@@ -546,34 +549,34 @@ print("Metadatos de uso:", response.usage_metadata)`
         tag: "Módulo 02",
         title: "Fundamentos, Prompts, Instrucciones del Sistema, Generación Multimedia y LLMs",
         eyebrow: "Módulo 02 · Generación Multimodal y Salidas Estructuradas",
-        summary: "Elige entre Gemini 2.5 Flash y Gemini 2.5 Pro, controla la profundidad de razonamiento con Thinking Budgets, garantiza esquemas JSON deterministas con Pydantic, genera imágenes con Imagen 3 y videos con Veo, y construye la Etapa 1 del Proyecto Hito.",
+        summary: "Elige entre Gemini 3.7 Flash y Gemini 3.1 Pro, controla la profundidad de razonamiento con Thinking Budgets, garantiza esquemas JSON deterministas con Pydantic, genera imágenes con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) y videos con Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`), y construye la Etapa 1 del Proyecto Hito.",
         readTime: "50 min",
         labPath: "labs/module-02-prompts-media/",
-        notebookPath: "notebooks/02_Prompts_Structured_Outputs_Imagen3_and_Veo.ipynb",
+        notebookPath: "notebooks/02_Prompts_Structured_Outputs_Gemini_Image_and_Omni_Video.ipynb",
         mdPath: "es/module-02-basics-prompts-media-llms/README.md",
         archFlow: [
           { num: "Etapa 1A", title: "System Instructions", desc: "Define rol persistente, tono, reglas y límites de seguridad" },
-          { num: "Etapa 1B", title: "Thinking y Esquema JSON", desc: "Razonamiento Gemini 2.5 + validación estricta con Pydantic" },
-          { num: "Etapa 1C", title: "Estudio Imagen 3", desc: "Renders fotorrealistas de producto vía client.models.generate_images" },
-          { num: "Etapa 1D", title: "Motor de Video Veo", desc: "Clips promocionales cinematográficos vía client.models.generate_videos" }
+          { num: "Etapa 1B", title: "Thinking y Esquema JSON", desc: "Razonamiento Gemini 3.7 / 3.1 + validación estricta con Pydantic" },
+          { num: "Etapa 1C", title: "Estudio Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)", desc: "Renders fotorrealistas de producto vía client.models.generate_content" },
+          { num: "Etapa 1D", title: "Motor de Video Gemini Omni 1.1 Flash", desc: "Clips promocionales cinematográficos vía client.interactions.create" }
         ],
         sections: [
           {
             heading: "1. Modelos de Lenguaje, System Instructions y Presupuesto de Razonamiento",
             body: [
-              "Los modelos Gemini 2.5 incorporan razonamiento nativo ('Thinking'). Puedes ajustar `thinking_config` para equilibrar latencia/costo frente a profundidad analítica.",
+              "Los modelos Gemini 3.x (`gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-3.1-pro`) incorporan razonamiento nativo ('Thinking'). Puedes ajustar `thinking_config` para equilibrar latencia/costo frente a profundidad analítica.",
               "Separa siempre las instrucciones de comportamiento (`system_instruction`) de los datos del usuario (`contents`). Esto eleva la precisión y protege contra inyecciones de prompt."
             ],
             bullets: [
-              "<strong>gemini-2.5-flash:</strong> Modelo principal de baja latencia y alta eficiencia para tareas multimodales, extracción estructurada y agentes en tiempo real.",
-              "<strong>gemini-2.5-pro:</strong> Ideal para programación compleja, diseño arquitectónico y análisis profundo.",
+              "<strong>gemini-3.7-flash:</strong> Modelo principal de baja latencia y alta eficiencia para tareas multimodales, extracción estructurada y agentes en tiempo real.",
+              "<strong>gemini-3.1-pro:</strong> Ideal para programación compleja, diseño arquitectónico y análisis profundo.",
               "<strong>Salidas Estructuradas:</strong> Pasa una clase Pydantic a `response_schema` con `response_mime_type='application/json'` para garantizar JSON 100% válido."
             ]
           },
           {
-            heading: "2. Generación Multimedia con Imagen 3 y Veo",
+            heading: "2. Generación Multimedia con Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash",
             body: [
-              "Con el cliente unificado `google-genai`, generar imágenes de alta resolución (Imagen 3) y clips de video (Veo) utiliza exactamente el mismo cliente que el texto."
+              "Con el cliente unificado `google-genai`, generar imágenes de alta resolución (Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)) y clips de video (Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)) utiliza exactamente el mismo cliente que el texto."
             ],
             codeTitle: "labs/module-02-prompts-media/product_studio_stage1.py",
             code: `from pydantic import BaseModel, Field
@@ -587,12 +590,12 @@ class ProductLaunchKit(BaseModel):
     tagline: str
     target_audience: str
     key_features: list[str]
-    imagen_prompt: str = Field(description="Prompt visual detallado para Imagen 3")
-    veo_video_prompt: str = Field(description="Prompt cinematográfico para Veo")
+    image_prompt: str = Field(description="Prompt visual detallado para Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)")
+    omni_video_prompt: str = Field(description="Prompt cinematográfico para Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)")
 
 # 1. Generar Brief de Producto Estructurado con System Instructions y Thinking
 brief_resp = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.7-flash",
     contents="Crea un kit de lanzamiento para una taza inteligente de espresso solar.",
     config=types.GenerateContentConfig(
         system_instruction="Eres un director creativo y diseñador industrial experto.",
@@ -604,11 +607,14 @@ brief_resp = client.models.generate_content(
 kit = ProductLaunchKit.model_validate_json(brief_resp.text)
 print("Kit de Lanzamiento Generado:", kit.model_dump_json(indent=2))
 
-# 2. Generar Imagen Principal del Producto con Imagen 3
-img_resp = client.models.generate_images(
-    model="imagen-3.0-generate-002",
-    prompt=kit.imagen_prompt,
-    config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="16:9"),
+# 2. Generar Imagen Principal del Producto con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)
+img_resp = client.models.generate_content(
+    model="gemini-3.1-flash-image",
+    contents=kit.image_prompt,
+    config=types.GenerateContentConfig(
+        response_modalities=["IMAGE"],
+        image_config=types.ImageConfig(aspect_ratio="16:9"),
+    ),
 )`
           }
         ],
@@ -618,7 +624,7 @@ img_resp = client.models.generate_images(
             "Escribiendo 'DEVUELVE SOLO JSON' en mayúsculas en el prompt.",
             "Configurando response_mime_type='application/json' y pasando un modelo Pydantic o JSON Schema en response_schema dentro de GenerateContentConfig.",
             "Subiendo temperature=2.0.",
-            "Solo Imagen 3 soporta JSON."
+            "Solo Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) soporta JSON."
           ],
           correctIndex: 1,
           explanation: "¡Exacto! Usar `response_mime_type='application/json'` junto con `response_schema=TuModeloPydantic` activa la decodificación restringida para que la salida siempre respete tu esquema."
@@ -626,8 +632,8 @@ img_resp = client.models.generate_images(
         references: [
           { title: "Guía de Salidas Estructuradas (JSON)", desc: "Uso de esquemas JSON y modelos Pydantic en Gemini API", url: "https://ai.google.dev/gemini-api/docs/structured-output" },
           { title: "Modelos de Razonamiento (Thinking)", desc: "Configuración de thinking_budget y tokens de razonamiento", url: "https://ai.google.dev/gemini-api/docs/thinking" },
-          { title: "Generación de Imágenes con Imagen 3", desc: "Guía oficial de Imagen 3 con el SDK google-genai", url: "https://ai.google.dev/gemini-api/docs/imagen" },
-          { title: "Generación de Video con Veo", desc: "Creación de videos de alta definición desde texto e imágenes", url: "https://ai.google.dev/gemini-api/docs/video" }
+          { title: "Generación de Imágenes con Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)", desc: "Guía oficial de Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) con el SDK google-genai", url: "https://ai.google.dev/gemini-api/docs/image-generation" },
+          { title: "Generación de Video con Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)", desc: "Creación de videos de alta definición desde texto e imágenes", url: "https://ai.google.dev/gemini-api/docs/video" }
         ]
       },
       {
@@ -678,7 +684,7 @@ async def run_live_copilot_session():
         system_instruction="Eres el Copiloto en Vivo de Product Studio. Usa herramientas para cálculos financieros.",
         tools=[calculate_unit_economics],
     )
-    async with client.aio.live.connect(model="gemini-2.0-flash-live-001", config=config) as session:
+    async with client.aio.live.connect(model="gemini-3.8-live", config=config) as session:
         await session.send(
             input="Si nuestra taza solar cuesta $18 de fabricar y se vende a $65 para 5,000 unidades, ¿cuál es el margen?",
             end_of_turn=True,
@@ -810,7 +816,7 @@ jobs:
           {
             heading: "1. El Salto de Graduación: De Consumidor de APIs a Orquestador de Agentes",
             body: [
-              "En los Módulos 1 al 4 aprendiste a integrar Gemini, Imagen 3, Veo y Live API dentro de tu código. En el Cierre Sorpresa inviertes la perspectiva: te gradúas hacia Google Antigravity (antigravity.google), donde agentes autónomos de ingeniería colaboran contigo en todo tu repositorio, terminal, navegador e infraestructura cloud.",
+              "En los Módulos 1 al 4 aprendiste a integrar Gemini, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) y Live API dentro de tu código. En el Cierre Sorpresa inviertes la perspectiva: te gradúas hacia Google Antigravity (antigravity.google), donde agentes autónomos de ingeniería colaboran contigo en todo tu repositorio, terminal, navegador e infraestructura cloud.",
               "Dado que Antigravity se conecta directamente con tus API Keys de Google AI Studio y proyectos de Google Cloud, todo lo que configuraste en los Módulos 1–4 funciona de inmediato."
             ],
             bullets: [

@@ -10,7 +10,7 @@ This master reference directory compiles every **verified public URL, official S
 
 | Resource | Verified Public URL | Description |
 | :--- | :--- | :--- |
-| **Google AI Studio** | [https://aistudio.google.com](https://aistudio.google.com) | Primary web workbench for prototyping prompts, testing Gemini/Imagen/Veo models, streaming live audio/video, and managing API keys. |
+| **Google AI Studio** | [https://aistudio.google.com](https://aistudio.google.com) | Primary web workbench for prototyping prompts, testing Gemini 3.x / Gemini Image / Gemini Omni models, streaming live audio/video, and managing API keys. |
 | **Gemini API Official Documentation** | [https://ai.google.dev/gemini-api/docs](https://ai.google.dev/gemini-api/docs) | Complete technical documentation for all Gemini Developer API models, endpoints, parameters, and capabilities. |
 | **Google Antigravity** | [https://antigravity.google](https://antigravity.google) | Google's agent-first software development platform and autonomous multi-agent orchestration environment. |
 | **Google Antigravity Docs** | [https://antigravity.google/docs](https://antigravity.google/docs) | Official documentation for Antigravity workspace rules, custom skills (`SKILL.md`), subagents, and MCP servers. |
@@ -37,11 +37,11 @@ This master reference directory compiles every **verified public URL, official S
 | Topic | Verified Public URL | Covered In |
 | :--- | :--- | :--- |
 | **Gemini Model Catalog & Token Limits** | [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models) | Module 01, Module 02 |
-| **Gemini 2.5 Thinking & Reasoning Budgets** | [https://ai.google.dev/gemini-api/docs/thinking](https://ai.google.dev/gemini-api/docs/thinking) | Module 02 |
+| **Gemini 3.7 / 3.1 Thinking & Reasoning Budgets** | [https://ai.google.dev/gemini-api/docs/thinking](https://ai.google.dev/gemini-api/docs/thinking) | Module 02 |
 | **Structured Outputs (JSON Schema & Pydantic)** | [https://ai.google.dev/gemini-api/docs/structured-output](https://ai.google.dev/gemini-api/docs/structured-output) | Module 02, Module 04 |
 | **Prompt Design & System Instructions** | [https://ai.google.dev/gemini-api/docs/prompting-strategies](https://ai.google.dev/gemini-api/docs/prompting-strategies) | Module 02 |
-| **Imagen 3 Image Generation** | [https://ai.google.dev/gemini-api/docs/imagen](https://ai.google.dev/gemini-api/docs/imagen) | Module 02 |
-| **Veo Video Generation** | [https://ai.google.dev/gemini-api/docs/video](https://ai.google.dev/gemini-api/docs/video) | Module 02 |
+| **Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Image Generation** | [https://ai.google.dev/gemini-api/docs/image-generation](https://ai.google.dev/gemini-api/docs/image-generation) | Module 02 |
+| **Gemini Omni 1.1 Flash Video Generation** | [https://ai.google.dev/gemini-api/docs/video](https://ai.google.dev/gemini-api/docs/video) | Module 02 |
 | **Gemini Live API (Bidirectional Streaming)** | [https://ai.google.dev/gemini-api/docs/live](https://ai.google.dev/gemini-api/docs/live) | Module 03, Module 04 |
 | **Function Calling & Tool Use** | [https://ai.google.dev/gemini-api/docs/function-calling](https://ai.google.dev/gemini-api/docs/function-calling) | Module 03 |
 | **Context Caching Guide** | [https://ai.google.dev/gemini-api/docs/caching](https://ai.google.dev/gemini-api/docs/caching) | Module 01, Surprise Finisher |

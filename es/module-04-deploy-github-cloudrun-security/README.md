@@ -17,7 +17,7 @@ flowchart LR
     end
 
     subgraph GCP["Google Cloud Platform (Producción)"]
-        AR["Artifact Registry (Imagen Docker)"]
+        AR["Artifact Registry (Gemini Image (`gemini-3.1-flash-image`) Docker)"]
         SM["Secret Manager (GEMINI_API_KEY)"]
         
         subgraph CloudRun["Google Cloud Run (Autoscaling + WebSockets)"]
@@ -120,7 +120,7 @@ async def generar_producto_seguro(solicitud: SolicitudProducto, request: Request
     )
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents=prompt_aislado,
         config=types.GenerateContentConfig(
             system_instruction=(
@@ -158,7 +158,7 @@ async def proxy_live_copilot(websocket: WebSocket):
     )
     try:
         async with client.aio.live.connect(
-            model="gemini-2.0-flash-live-001", config=config_live
+            model="gemini-3.8-live", config=config_live
         ) as session:
             while True:
                 mensaje_cliente = await websocket.receive_text()

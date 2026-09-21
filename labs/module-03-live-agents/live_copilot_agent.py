@@ -3,7 +3,7 @@
 Module 03 Lab — Stage 2 of the Flagship Project: Live Multimodal Copilot + Tool Agent
 =====================================================================================
 Demonstrates an asynchronous Python agent built on the Gemini Live API
-(`client.aio.live.connect(model="gemini-2.0-flash-live-001", config=...)`) featuring:
+(`client.aio.live.connect(model="gemini-3.8-live", config=...)`) featuring:
   - Real-time bidirectional streaming (text / PCM audio ready)
   - Live Function Calling / Tool Execution (`calculate_unit_economics`,
     `check_inventory_status`, `generate_marketing_asset`)
@@ -64,7 +64,7 @@ def check_inventory_status(sku_code: str, warehouse_region: str = "NA-EAST") -> 
 
 
 def generate_marketing_asset(product_name: str, asset_type: str, visual_style: str) -> Dict[str, Any]:
-    """Queues an Imagen 3 / Veo studio asset generation job and returns its job manifest."""
+    """Queues an Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) / Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) studio asset generation job and returns its job manifest."""
     job_id = f"studio-{abs(hash((product_name, asset_type, visual_style))) % 100000:05d}"
     return {
         "job_id": job_id,
@@ -128,7 +128,7 @@ async def handle_tool_calls(session: Any, tool_call: types.LiveServerToolCall) -
 async def run_live_session() -> None:
     """Runs an interactive multi-turn Gemini Live API session with tool use and barge-in handling."""
     client = genai.Client()
-    model_id = "gemini-2.0-flash-live-001"
+    model_id = "gemini-3.8-live"
 
     scripted_turns = [
         "Hi Copilot! Can you calculate the unit economics for AeroBrew Nano if our unit cost is $28, retail price is $99, and CAC is $24?",

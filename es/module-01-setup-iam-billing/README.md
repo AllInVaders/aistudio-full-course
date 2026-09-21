@@ -106,7 +106,7 @@ Nunca asignes el rol primitivo `Owner` (`roles/owner`) o `Editor` (`roles/editor
 
 | Rol IAM (Identificador Técnico) | Nombre del Rol | Propósito Específico en nuestra Arquitectura |
 | :--- | :--- | :--- |
-| `roles/aiplatform.user` | **Vertex AI User** | Permite invocar modelos Gemini, Imagen y Veo en Vertex AI sin otorgar permisos administrativos sobre el proyecto. |
+| `roles/aiplatform.user` | **Vertex AI User** | Permite invocar modelos Gemini 3.x, Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash en Vertex AI sin otorgar permisos administrativos sobre el proyecto. |
 | `roles/secretmanager.secretAccessor` | **Secret Manager Secret Accessor** | Permite leer secretos específicos (como `GEMINI_API_KEY` o claves de terceros) en tiempo de ejecución desde Cloud Run. |
 | `roles/run.invoker` | **Cloud Run Invoker** | Permite que un servicio frontend autenticado o un API Gateway invoque nuestro backend en Cloud Run. |
 
@@ -142,12 +142,12 @@ Al ingresar a [https://aistudio.google.com](https://aistudio.google.com), encont
 
 1. **Chat / Prompt Workspace (Estudio de Prompts)**:
    - Permite probar prompts multimodales combinando texto, imágenes, audio, video y documentos PDF.
-   - Panel derecho de hiperparámetros: selección de modelo (`gemini-2.5-flash`, `gemini-2.5-pro`), control de **Temperature**, **Thinking Budget** (presupuesto de razonamiento), **Structured Output** (esquema JSON), **Function Calling** y **Grounding with Google Search**.
+   - Panel derecho de hiperparámetros: selección de modelo (`gemini-3.7-flash`, `gemini-3.1-pro`), control de **Temperature**, **Thinking Budget** (presupuesto de razonamiento), **Structured Output** (esquema JSON), **Function Calling** y **Grounding with Google Search**.
    - Botón **"Get code"**: exporta instantáneamente tu configuración exacta a código Python, JavaScript/TypeScript, Go o cURL usando el SDK `google-genai`.
 2. **Stream Realtime (Estudio Multimodal en Vivo)**:
    - Interfaz interactiva de latencia ultrabaja para conversar con Gemini mediante micrófono, cámara web o compartición de pantalla usando la **Gemini Live API**.
 3. **Generate Media (Estudio de Medios Generativos)**:
-   - Laboratorio visual para experimentar con **Imagen 3** (generación de imágenes fotorrealistas) y **Veo** (generación de video de alta definición).
+   - Laboratorio visual para experimentar con **Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)** (generación de imágenes fotorrealistas) y **Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)** (generación de video de alta definición).
 4. **API Keys & Usage Dashboard (Llaves y Telemetría)**:
    - Gestión centralizada de llaves de API, estado del plan de facturación, gráficos de consumo en tiempo real, errores HTTP (429 Rate Limit / 500) y consumo de tokens por modelo.
 
@@ -171,7 +171,7 @@ def verificar_conexion_ai_studio() -> None:
     client = genai.Client()
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents="Confirma en una sola frase que el SDK google-genai está operativo en español.",
         config=types.GenerateContentConfig(
             temperature=0.2,
@@ -190,7 +190,7 @@ def verificar_conexion_vertex_ai(project_id: str, location: str = "us-central1")
     )
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents="Confirma en una sola frase que la conexión IAM con Vertex AI está activa.",
     )
     print(f"[Vertex AI] Respuesta: {response.text}")
@@ -213,7 +213,7 @@ const ai = new GoogleGenAI({});
 
 async function verificarConexion(): Promise<void> {
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.7-flash',
     contents: 'Confirma en una sola frase que el SDK @google/genai en TypeScript funciona correctamente.',
     config: {
       temperature: 0.2,
@@ -249,7 +249,7 @@ En este primer módulo hemos establecido los **cimientos de seguridad y gobernan
 2. **¿Qué paquete de Python debes instalar siempre para trabajar con los modelos Gemini actuales y por qué?**
    <details>
    <summary>Ver respuesta correcta</summary>
-   Debes instalar siempre <code>google-genai</code> (importado como <code>from google import genai</code>). El paquete anterior <code>google-generativeai</code> está obsoleto y no soporta la unificación con Vertex AI ni las capacidades más recientes como Gemini Live API, Imagen 3 y Veo.
+   Debes instalar siempre <code>google-genai</code> (importado como <code>from google import genai</code>). El paquete anterior <code>google-generativeai</code> está obsoleto y no soporta la unificación con Vertex AI ni las capacidades más recientes como Gemini Live API, Gemini 3.1 Flash Image (Nano Banana 2) y Gemini Omni 1.1 Flash.
    </details>
 
 3. **¿Cuáles son los tres roles IAM de mínimo privilegio que asignamos a nuestra cuenta de servicio de producción y qué hace cada uno?**

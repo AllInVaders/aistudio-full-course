@@ -31,7 +31,7 @@ flowchart TB
     end
 
     subgraph StageB["Level 2: Unified `google-genai` Application Code"]
-        B1["FastAPI + WebSocket Microservice\n(Your App Calls Gemini, Imagen 3, Veo & Live API)"]
+        B1["FastAPI + WebSocket Microservice\n(Your App Calls Gemini, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) & Live API)"]
     end
 
     subgraph StageC["Level 3: Google Antigravity (`https://antigravity.google`)"]
@@ -121,7 +121,7 @@ Follow this exact 4-step workflow whenever adding a new tool to the AI Product S
 
 Whether you invoke agents inside the **Google Antigravity IDE (`https://antigravity.google`)** or build your own multi-agent harness using the **Google Gen AI & Antigravity SDK patterns**, the core architectural secret is **Specialized Subagent Decomposition with Parallel Execution**.
 
-Below is a complete, runnable **Multi-Agent Orchestrator** that dispatches three specialized Gemini 2.5 agents in parallel (**Product Architect**, **Security Auditor**, and **FinOps Cost Optimizer**) and synthesizes their findings into an executive engineering blueprint.
+Below is a complete, runnable **Multi-Agent Orchestrator** that dispatches three specialized Gemini 3.7 / 3.1 agents in parallel (**Product Architect**, **Security Auditor**, and **FinOps Cost Optimizer**) and synthesizes their findings into an executive engineering blueprint.
 
 ### Python Implementation (`graduate_multi_agent_orchestrator.py`)
 
@@ -140,7 +140,7 @@ from google.genai import types
 SUBAGENT_PERSONAS: Dict[str, str] = {
     "ProductArchitect": (
         "You are the Principal Multimodal Systems Architect. Analyze the feature request and "
-        "specify exact Gemini 2.5 / Imagen 3 / Veo / Live API endpoints, schemas, and latency budgets."
+        "specify exact Gemini 3.7 / 3.1 / Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) / Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) / Live API endpoints, schemas, and latency budgets."
     ),
     "SecurityAuditor": (
         "You are the Lead AI Security & Red-Team Auditor. Identify prompt injection vectors, "
@@ -161,7 +161,7 @@ async def run_specialized_subagent(
 ) -> Dict[str, str]:
     print(f"🤖 Spawning Subagent [{role_name}]...")
     response = await client.aio.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents=feature_spec,
         config=types.GenerateContentConfig(
             system_instruction=system_prompt,
@@ -187,14 +187,14 @@ async def orchestrate_feature_evolution(feature_request: str) -> None:
     ]
     subagent_reports = await asyncio.gather(*tasks)
 
-    # 2. Synthesize subagent findings with the Lead Orchestrator Agent (Gemini 2.5 Pro)
+    # 2. Synthesize subagent findings with the Lead Orchestrator Agent (Gemini 3.1 Pro)
     combined_context = "\n\n".join(
         f"### Report from {item['role']}\n{item['report']}" for item in subagent_reports
     )
 
     print("\n🧠 Lead Orchestrator synthesizing final Implementation Plan...")
     final_plan = await client.aio.models.generate_content(
-        model="gemini-2.5-pro",
+        model="gemini-3.1-pro",
         contents=(
             f"Feature Request: {feature_request}\n\n"
             f"Subagent Reports:\n{combined_context}\n\n"
@@ -217,7 +217,7 @@ if __name__ == "__main__":
     asyncio.run(
         orchestrate_feature_evolution(
             "Add live competitor packaging visual comparison to the AI Product Studio Copilot "
-            "using webcam video frames + Imagen 3 side-by-side mockups."
+            "using webcam video frames + Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) side-by-side mockups."
         )
     )
 ```

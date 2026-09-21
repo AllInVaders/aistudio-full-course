@@ -108,7 +108,7 @@ MAPA_HERRAMIENTAS = {
 
 async def iniciar_copiloto_en_vivo():
     client = genai.Client()
-    modelo_live = "gemini-2.0-flash-live-001"
+    modelo_live = "gemini-3.8-live"
 
     configuracion_live = types.LiveConnectConfig(
         response_modalities=["AUDIO"],
@@ -192,7 +192,7 @@ const ai = new GoogleGenAI({});
 
 async function conectarCopilotoLiveTS() {
   const session = await ai.live.connect({
-    model: 'gemini-2.0-flash-live-001',
+    model: 'gemini-3.8-live',
     config: {
       responseModalities: [Modality.AUDIO],
       systemInstruction: 'Eres un copiloto de diseño industrial ágil y conciso.',
@@ -250,7 +250,7 @@ Su arquitectura pública se apoya en cuatro pilares fundamentales:
 
 Con el código de este módulo, nuestro **AI Product Studio** ha evolucionado de un generador bajo demanda (Etapa 1) a un **Copiloto Interactivo en Vivo (Etapa 2)**:
 - El usuario puede hablarle por micrófono y mostrarle bocetos en cámara web.
-- El copiloto responde por voz en milisegundos, soporta interrupciones naturales (*barge-in*) y ejecuta herramientas reales (`actualizar_diseno_producto`, `consultar_inventario_componentes`) que actualizan la base de datos y disparan nuevos renders de Imagen 3.
+- El copiloto responde por voz en milisegundos, soporta interrupciones naturales (*barge-in*) y ejecuta herramientas reales (`actualizar_diseno_producto`, `consultar_inventario_componentes`) que actualizan la base de datos y disparan nuevos renders de Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2).
 
 ---
 

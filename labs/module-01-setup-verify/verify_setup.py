@@ -3,7 +3,7 @@
 Module 01 Lab: Environment Setup, Model Discovery & Token Economics Verification
 ================================================================================
 Verifies authentication (GEMINI_API_KEY or Application Default Credentials),
-discovers available Gemini, Imagen 3, and Veo models via the unified `google-genai`
+discovers available Gemini, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), and Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) models via the unified `google-genai`
 SDK, runs a token accounting check (`client.models.count_tokens`), and prints a
 diagnostic health report.
 
@@ -37,20 +37,20 @@ def check_auth_mode() -> Tuple[str, bool]:
 
 
 def discover_models(client: genai.Client) -> Dict[str, List[str]]:
-    """Lists available models grouped by modality family (Gemini, Imagen, Veo, Embeddings)."""
+    """Lists available models grouped by modality family (Gemini, Gemini Image, Gemini Omni, Embeddings)."""
     families: Dict[str, List[str]] = {
         "Gemini (Text / Multimodal / Live)": [],
-        "Imagen (Image Generation)": [],
-        "Veo (Video Generation)": [],
+        "Gemini Image (Image Generation)": [],
+        "Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (Video Generation)": [],
         "Embeddings": [],
     }
     for model in client.models.list():
         name = (model.name or "").replace("models/", "")
         lowered = name.lower()
         if "imagen" in lowered:
-            families["Imagen (Image Generation)"].append(name)
+            families["Gemini Image (Image Generation)"].append(name)
         elif "veo" in lowered:
-            families["Veo (Video Generation)"].append(name)
+            families["Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (Video Generation)"].append(name)
         elif "embedding" in lowered:
             families["Embeddings"].append(name)
         elif "gemini" in lowered:
@@ -61,7 +61,7 @@ def discover_models(client: genai.Client) -> Dict[str, List[str]]:
     return families
 
 
-def run_token_economics_check(client: genai.Client, model_id: str = "gemini-2.5-flash") -> Dict[str, int]:
+def run_token_economics_check(client: genai.Client, model_id: str = "gemini-3.7-flash") -> Dict[str, int]:
     """Counts tokens on a sample prompt and estimates input/output cost per 1M tokens."""
     sample_prompt = (
         "You are an AI Product Studio strategist. Summarize the three pillars of a "
@@ -108,7 +108,7 @@ def print_health_table(auth_desc: str, families: Dict[str, List[str]], metrics: 
         suffix = f" (+{len(models) - 4} more)" if len(models) > 4 else ""
         print(f"    - {family:<34}: {len(models):>2} models | {preview}{suffix}")
     print("-" * 78)
-    print("  TOKEN ECONOMICS & LATENCY CHECK (gemini-2.5-flash)")
+    print("  TOKEN ECONOMICS & LATENCY CHECK (gemini-3.7-flash)")
     print(f"    - Preflight count_tokens()   : {metrics['preflight_tokens']} tokens")
     print(f"    - Actual Prompt Tokens       : {metrics['prompt_tokens']} tokens")
     print(f"    - Output Candidate Tokens    : {metrics['candidates_tokens']} tokens")

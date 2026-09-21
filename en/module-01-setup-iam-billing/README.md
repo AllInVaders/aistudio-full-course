@@ -69,7 +69,7 @@ The short answer: **Start in Google AI Studio to iterate at light speed, and use
 | **Target Audience** | Indie hackers, startups, product engineers, rapid prototyping, and production apps that prefer API-key simplicity | Enterprise platform teams requiring strict GCP compliance, VPC perimeters, and MLOps pipelines |
 | **Onboarding Speed** | **Instant (< 30 seconds)** — Sign in with Google and click *Get API Key* | **5–10 minutes** — Requires GCP project, billing account, enabled APIs, and IAM roles |
 | **Authentication** | API Key (`GEMINI_API_KEY`) | IAM Service Accounts, Workload Identity Federation, Application Default Credentials (ADC) |
-| **Free Tier** | **Yes** — Generous free tier for testing Gemini 2.5 Pro, Flash, and Live API | **No recurring free tier** ($300 new-account GCP trial credits apply) |
+| **Free Tier** | **Yes** — Generous free tier for testing Gemini 3.1 Pro, Flash, and Live API | **No recurring free tier** ($300 new-account GCP trial credits apply) |
 | **Data Privacy (Paid Tier)** | **Prompts & responses are NEVER used to train Google models** | **Prompts & responses are NEVER used to train Google models** (covered by Google Cloud DPA) |
 | **Enterprise Controls** | Project-level API key restrictions, Cloud Billing budgets | VPC Service Controls (VPC-SC), Customer-Managed Encryption Keys (CMEK), Private Service Connect, Data Residency |
 | **Unified SDK Support** | `genai.Client(api_key=...)` | `genai.Client(vertexai=True, project=..., location=...)` |
@@ -107,7 +107,7 @@ Understanding the economic and privacy contract between Free Tier and Paid Tier 
 | :--- | :--- | :--- |
 | **Cost** | $0.00 | Pay-as-you-go per 1M tokens / per image / per second of video |
 | **Rate Limits (RPM / TPM / RPD)** | Lower rate limits designed for individual experimentation | High production throughput (thousands of RPM & millions of TPM, auto-scaling with usage tier) |
-| **Imagen 3 & Veo Generation** | Limited or unavailable on unbilled projects | Full access to high-resolution **Imagen 3** and **Veo** video generation |
+| **Gemini 3.1 Flash Image (Nano Banana 2) & Gemini Omni 1.1 Flash Generation** | Limited or unavailable on unbilled projects | Full access to high-resolution **Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)** and **Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)** video generation |
 | **Context Caching & Batch API** | Limited availability | Full access (50% discount on Batch API; up to 75%+ savings on cached context tokens) |
 | **Data Privacy & Model Training** | Google reviewers & systems **may use unpaid prompts/responses** to improve Google products | **STRICT ZERO-TRAINING GUARANTEE:** Your prompts, inputs, and outputs are **NEVER** used to train or improve Google models |
 
@@ -177,7 +177,7 @@ To prevent unexpected bills during development or traffic spikes:
 Navigate to **[https://aistudio.google.com](https://aistudio.google.com)**. Here is what every section in the left navigation bar does and how pro engineers use it:
 
 1. **Chat / Prompt Playground (`Create Prompt`):**
-   - Test **System Instructions**, switch between **Gemini 2.5 Pro** and **Gemini 2.5 Flash**, upload images/audio/PDFs/videos directly from your drive or desktop, and adjust **Temperature**, **Thinking Budget**, **Safety Settings**, **Structured Output**, **Function Calling**, and **Grounding with Google Search**.
+   - Test **System Instructions**, switch between **Gemini 3.1 Pro** and **Gemini 3.7 Flash**, upload images/audio/PDFs/videos directly from your drive or desktop, and adjust **Temperature**, **Thinking Budget**, **Safety Settings**, **Structured Output**, **Function Calling**, and **Grounding with Google Search**.
    - **Pro Tip:** Click the **`Get code` (`<>`)** button in the top right corner of any prompt session to export instant, runnable Python, JavaScript, cURL, or Kotlin snippets using the `google-genai` SDK!
 2. **Stream Realtime (`Live API Playground`):**
    - Test sub-second bidirectional voice, camera, and screen-sharing conversations powered by the Gemini Live API before writing a single line of WebSocket code.
@@ -195,7 +195,7 @@ Navigate to **[https://aistudio.google.com](https://aistudio.google.com)**. Here
 Before we build **Stage 1 of the AI Product Studio** in Module 02, let's build a production-grade diagnostic script in both **Python** and **TypeScript** that:
 1. Verifies your `GEMINI_API_KEY` and `google-genai` SDK installation.
 2. Queries the live Gemini model catalog and inspects token limits (`input_token_limit`, `output_token_limit`).
-3. Performs a low-latency health check against **Gemini 2.5 Flash** and reports exact token accounting (`usage_metadata`).
+3. Performs a low-latency health check against **Gemini 3.7 Flash** and reports exact token accounting (`usage_metadata`).
 
 ### Python Implementation (`lab01_verify_setup.py`)
 
@@ -235,7 +235,7 @@ def run_environment_audit() -> None:
     print(f"{'Model ID':<35} | {'Input Limit':<14} | {'Output Limit':<14}")
     print("-" * 72)
 
-    target_keywords = ("gemini-2.5", "imagen-3", "veo")
+    target_keywords = ("gemini-3.7", "gemini-3.1-flash-image", "veo")
     discovered_count = 0
 
     for model in client.models.list():
@@ -247,14 +247,14 @@ def run_environment_audit() -> None:
             print(f"{name:<35} | {in_limit:<14} | {out_limit:<14}")
 
     print("-" * 72)
-    print(f"✅ Discovered {discovered_count} flagship Gemini 2.5 / Imagen / Veo endpoints.")
+    print(f"✅ Discovered {discovered_count} flagship Gemini 3.7 / 3.1 / Gemini Image / Gemini Omni Video endpoints.")
 
     # 2. Execute a live round-trip smoke test with token telemetry
-    print("\n⚡ Running Live Round-Trip Health Check (gemini-2.5-flash)...")
+    print("\n⚡ Running Live Round-Trip Health Check (gemini-3.7-flash)...")
     start_time = time.perf_counter()
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents="Confirm readiness for the AI Product Studio course in one crisp sentence.",
         config=types.GenerateContentConfig(
             system_instruction="You are the diagnostic kernel for the AI Product Studio platform.",
@@ -311,7 +311,7 @@ async function runEnvironmentAudit(): Promise<void> {
 
   const startTime = performance.now();
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.7-flash",
     contents: "Confirm TypeScript SDK readiness for the AI Product Studio in one sentence.",
     config: {
       systemInstruction: "You are the diagnostic kernel for the AI Product Studio platform.",
@@ -352,7 +352,7 @@ In the **Free Tier** (unbilled project), Google may review and use prompts and r
 </details>
 
 <details>
-<summary><strong>Question 2: Which Python package should you install for all modern Gemini 2.5, Imagen 3, Veo, and Live API development?</strong></summary>
+<summary><strong>Question 2: Which Python package should you install for all modern Gemini 3.7 / 3.1, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`), and Live API development?</strong></summary>
 
 **Answer:**
 You must install **`google-genai`** (`pip install google-genai`, imported as `from google import genai` and initialized via `client = genai.Client()`). The older `google-generativeai` package is deprecated and should never be used in new projects.

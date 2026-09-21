@@ -3,8 +3,8 @@
  * ========================================================================================
  * Node.js equivalent demonstrating:
  *   1. System Instructions + Thinking Config + Strict JSON Schema Structured Output
- *   2. Photorealistic Hero Image Generation with Imagen 3 (`ai.models.generateImages`)
- *   3. Cinematic Promo Clip Generation with Veo (`ai.models.generateVideos`)
+ *   2. Photorealistic Hero Image Generation with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) (`ai.models.generateContent`)
+ *   3. Cinematic Promo Clip Generation with Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (`ai.interactions.create`)
  *
  * Usage:
  *   npm install @google/genai
@@ -25,11 +25,11 @@ const PRODUCT_LAUNCH_SCHEMA = {
     positioningStatement: { type: Type.STRING, description: 'Clear value proposition and differentiation.' },
     imagenHeroPrompt: {
       type: Type.STRING,
-      description: 'Detailed studio photography prompt for Imagen 3 including lighting, lens, and materials.',
+      description: 'Detailed studio photography prompt for Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) including lighting, lens, and materials.',
     },
     veoTeaserPrompt: {
       type: Type.STRING,
-      description: 'Cinematic 5-second motion shot prompt for Veo describing camera movement and lighting.',
+      description: 'Cinematic 5-second motion shot prompt for Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) describing camera movement and lighting.',
     },
     channels: {
       type: Type.ARRAY,
@@ -60,7 +60,7 @@ const PRODUCT_LAUNCH_SCHEMA = {
 const SYSTEM_INSTRUCTION =
   'You are the Executive Creative Director & Chief Product Strategist at an AI Product Studio. ' +
   'Given a raw product concept, craft a complete bilingual (English + Spanish) launch kit with ' +
-  'studio-grade visual prompts engineered specifically for Imagen 3 and Veo.';
+  'studio-grade visual prompts engineered specifically for Gemini 3.1 Flash Image (Nano Banana 2) and Gemini Omni 1.1 Flash.';
 
 async function main() {
   const concept =
@@ -73,7 +73,7 @@ async function main() {
 
   console.log(`\n[1/3] Generating Bilingual Launch Kit for: ${concept}`);
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.7-flash',
     contents: `Create a complete bilingual launch kit for this product concept:\n\n${concept}`,
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
@@ -91,9 +91,9 @@ async function main() {
   console.log(`  -> EN Tagline: ${kit.taglineEn}`);
   console.log(`  -> ES Tagline: ${kit.taglineEs}`);
 
-  console.log('\n[2/3] Generating Studio Hero Image with Imagen 3...');
-  const imgResp = await ai.models.generateImages({
-    model: 'imagen-3.0-generate-002',
+  console.log('\n[2/3] Generating Studio Hero Image with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)...');
+  const imgResp = await ai.models.generateContent({
+    model: 'gemini-3.1-flash-image',
     prompt: kit.imagenHeroPrompt,
     config: {
       numberOfImages: 1,
@@ -105,16 +105,16 @@ async function main() {
   const base64Image = imgResp.generatedImages[0].image.imageBytes;
   const heroPath = path.join(outDir, 'hero_shot.jpg');
   await fs.writeFile(heroPath, Buffer.from(base64Image, 'base64'));
-  console.log(`  -> Saved Imagen 3 hero shot to ${heroPath}`);
+  console.log(`  -> Saved Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) hero shot to ${heroPath}`);
 
   if (process.env.SKIP_VIDEO === 'true') {
-    console.log('\n[3/3] Skipped Veo generation (SKIP_VIDEO=true).');
+    console.log('\n[3/3] Skipped Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) generation (SKIP_VIDEO=true).');
     return;
   }
 
-  console.log('\n[3/3] Submitting Veo Cinematic Promo Video Job...');
-  let operation = await ai.models.generateVideos({
-    model: 'veo-2.0-generate-001',
+  console.log('\n[3/3] Submitting Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) Cinematic Promo Video Job...');
+  let operation = await ai.interactions.create({
+    model: 'gemini-omni-1.1-flash',
     prompt: kit.veoTeaserPrompt,
     config: { aspectRatio: '16:9' },
   });
@@ -122,9 +122,9 @@ async function main() {
   while (!operation.done) {
     await new Promise((resolve) => setTimeout(resolve, 10000));
     operation = await ai.operations.getVideosOperation({ operation });
-    console.log('  [Veo] Still rendering frames...');
+    console.log('  [Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)] Still rendering frames...');
   }
-  console.log('  -> Veo render completed:', operation.response?.generatedVideos?.[0]?.video?.uri);
+  console.log('  -> Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) render completed:', operation.response?.generatedVideos?.[0]?.video?.uri);
 }
 
 main().catch((err) => {

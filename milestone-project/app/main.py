@@ -7,7 +7,7 @@ Production-ready Cloud Run service combining:
   - Secret Manager Fallback Helper (`GEMINI_API_KEY`)
   - `/api/health`: Readiness & model configuration probe
   - `/api/generate-brief`: Structured Pydantic Product Launch Kit generator
-  - `/api/generate-image`: Imagen 3 studio hero image generator (base64 JPEG)
+  - `/api/generate-image`: Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) studio hero image generator (base64 JPEG)
   - `/ws/live-copilot`: Real-time Gemini Live API WebSocket bridge with tool calling
   - Static Bilingual (EN/ES) Studio Web Console at `/`
 """
@@ -115,7 +115,7 @@ class ProductLaunchBrief(BaseModel):
     positioning_summary: str
     recommended_price_usd: float
     imagen_hero_prompt: str
-    veo_video_prompt: str
+    omni_video_prompt: str
     campaigns: List[ChannelCampaign]
 
 
@@ -162,7 +162,7 @@ LIVE_TOOLS = {
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="AI Product Studio & Live Multimodal Copilot",
-    description="Flagship Capstone API built with Google AI Studio, Gemini 2.5, Imagen 3, and Gemini Live API.",
+    description="Flagship Capstone API built with Google AI Studio, Gemini 3.7 / 3.1, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2), and Gemini Live API.",
     version="1.0.0",
 )
 
@@ -206,9 +206,9 @@ async def health_check() -> Dict[str, Any]:
         "service": "ai-product-studio-capstone",
         "credentials_configured": has_key,
         "models": {
-            "brief_generator": "gemini-2.5-flash",
-            "image_generator": "imagen-3.0-generate-002",
-            "live_copilot": "gemini-2.0-flash-live-001",
+            "brief_generator": "gemini-3.7-flash",
+            "image_generator": "gemini-3.1-flash-image",
+            "live_copilot": "gemini-3.8-live",
         },
     }
 
@@ -218,7 +218,7 @@ async def generate_brief(payload: BriefRequest) -> ProductLaunchBrief:
     clean_concept = sanitize_and_validate_prompt(payload.concept)
     client = get_genai_client()
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents=(
             f"Product Concept: {clean_concept}\n"
             f"Target Market: {payload.target_market}\n"
@@ -227,7 +227,7 @@ async def generate_brief(payload: BriefRequest) -> ProductLaunchBrief:
         config=types.GenerateContentConfig(
             system_instruction=(
                 "You are an Executive Creative Director & Product Strategist. "
-                "Produce structured, commercially viable bilingual launch briefs with rich Imagen 3 and Veo prompts."
+                "Produce structured, commercially viable bilingual launch briefs with rich Gemini 3.1 Flash Image (Nano Banana 2) and Gemini Omni 1.1 Flash prompts."
             ),
             temperature=0.4,
             response_mime_type="application/json",
@@ -242,8 +242,8 @@ async def generate_brief(payload: BriefRequest) -> ProductLaunchBrief:
 async def generate_image(payload: ImageRequest) -> Dict[str, str]:
     clean_prompt = sanitize_and_validate_prompt(payload.prompt, max_length=1500)
     client = get_genai_client()
-    result = client.models.generate_images(
-        model="imagen-3.0-generate-002",
+    result = client.models.generate_content(
+        model="gemini-3.1-flash-image",
         prompt=clean_prompt,
         config=types.GenerateImagesConfig(
             number_of_images=1,
@@ -283,7 +283,7 @@ async def websocket_live_copilot(websocket: WebSocket) -> None:
     )
 
     try:
-        async with client.aio.live.connect(model="gemini-2.0-flash-live-001", config=live_config) as session:
+        async with client.aio.live.connect(model="gemini-3.8-live", config=live_config) as session:
             while True:
                 incoming = await websocket.receive_json()
                 user_text = sanitize_and_validate_prompt(incoming.get("message", ""), max_length=1000)

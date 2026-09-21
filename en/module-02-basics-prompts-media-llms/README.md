@@ -2,7 +2,7 @@
 
 > **Navigation:** [← Module 01: Setup, IAM & Billing](../module-01-setup-iam-billing/README.md) | [Course Home (`../README.md`)](../README.md) | **Next:** [Module 03: Live Models, Agents, Antigravity SDK & Apps →](../module-03-live-agents-antigravity-sdk/README.md)
 
-Welcome to **Module 02**! Now that your Google AI Studio environment, IAM permissions, and billing guardrails are in place, it is time to master the core generative engines of the Gemini ecosystem: **Gemini 2.5 Pro & Flash reasoning models, System Instructions, strict Pydantic Structured Outputs, Imagen 3 high-resolution image synthesis, and Veo video generation.**
+Welcome to **Module 02**! Now that your Google AI Studio environment, IAM permissions, and billing guardrails are in place, it is time to master the core generative engines of the Gemini ecosystem: **Gemini 3.1 Pro & Flash reasoning models, System Instructions, strict Pydantic Structured Outputs, Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) high-resolution image synthesis, and Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) video generation.**
 
 In this module, we build **Stage 1 of our Flagship Milestone Project: The AI Product Studio Creative Engine**—a complete multimodal pipeline that transforms a single founder/product idea into a validated technical specification, structured marketing campaign JSON, photorealistic product hero images, and a cinematic product reveal video reel.
 
@@ -11,11 +11,11 @@ In this module, we build **Stage 1 of our Flagship Milestone Project: The AI Pro
 ## 🎯 Learning Objectives
 
 By the end of this module, you will be able to:
-1. Choose strategically between **Gemini 2.5 Flash** (high-speed, cost-efficient workhorse) and **Gemini 2.5 Pro** (deep complex reasoning & coding flagship) based on latency, task complexity, and token economics.
+1. Choose strategically between **Gemini 3.7 Flash** (high-speed, cost-efficient workhorse) and **Gemini 3.1 Pro** (deep complex reasoning & coding flagship) based on latency, task complexity, and token economics.
 2. Control internal chain-of-thought reasoning depth and latency dynamically using **`thinking_config` (`ThinkingConfig(thinking_budget=...)`)**.
 3. Craft deterministic, production-grade **System Instructions** using persona anchoring, XML/Markdown structural delimiters, and few-shot exemplars.
 4. Guarantee 100% schema-compliant JSON outputs using **Pydantic models** in Python (`response_schema=ProductLaunchPlan`) and **TypeScript JSON Schemas**.
-5. Generate high-resolution visual assets with **Imagen 3** (`client.models.generate_images`) and asynchronous HD video reels with **Veo** (`client.models.generate_videos`).
+5. Generate high-resolution visual assets with **Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)** (`client.models.generate_content`) and asynchronous HD video reels with **Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)** (`client.interactions.create`).
 6. Assemble and run **Stage 1 of the Flagship Project**: the **AI Product Studio Creative Engine**.
 
 ---
@@ -26,36 +26,36 @@ By the end of this module, you will be able to:
 flowchart LR
     UserPrompt["💡 Raw Product Brief\n(Text / Sketch / Audio)"] --> Router{"Model Selection &\nThinking Budget"}
 
-    Router -->|"Deep Strategy & Architecture\nthinking_budget=2048"| Pro["Gemini 2.5 Pro\n(Complex Reasoning)"]
-    Router -->|"Fast Copy & Iteration\nthinking_budget=0 or 512"| Flash["Gemini 2.5 Flash\n(Low-Latency Workhorse)"]
+    Router -->|"Deep Strategy & Architecture\nthinking_budget=2048"| Pro["Gemini 3.1 Pro\n(Complex Reasoning)"]
+    Router -->|"Fast Copy & Iteration\nthinking_budget=0 or 512"| Flash["Gemini 3.7 Flash\n(Low-Latency Workhorse)"]
 
     Pro --> Schema["Pydantic Structured Output\nresponse_mime_type='application/json'\nresponse_schema=ProductStudioBundle"]
     Flash --> Schema
 
-    Schema --> SpecJSON["📦 Validated JSON Spec\n• Product Name & Tagline\n• Target Personas\n• Hero Image Prompt\n• Veo Video Storyboard"]
+    Schema --> SpecJSON["📦 Validated JSON Spec\n• Product Name & Tagline\n• Target Personas\n• Hero Image Prompt\n• Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) Video Storyboard"]
 
-    SpecJSON -->|"client.models.generate_images()"| Imagen["🎨 Imagen 3\n(imagen-3.0-generate-002)\nPhotorealistic Product Shots"]
-    SpecJSON -->|"client.models.generate_videos()"| Veo["🎬 Veo Video Engine\n(veo-2.0-generate-001)\nCinematic Product Reveal MP4"]
+    SpecJSON -->|"client.models.generate_content()"| Gemini Image (`gemini-3.1-flash-image`)["🎨 Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)\n(gemini-3.1-flash-image)\nPhotorealistic Product Shots"]
+    SpecJSON -->|"client.interactions.create()"| Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)["🎬 Gemini Omni 1.1 Flash Video Engine\n(gemini-omni-1.1-flash)\nCinematic Product Reveal MP4"]
 
-    Imagen --> Bundle["✨ Complete Product Studio Asset Bundle"]
-    Veo --> Bundle
+    Gemini Image (`gemini-3.1-flash-image`) --> Bundle["✨ Complete Product Studio Asset Bundle"]
+    Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) --> Bundle
 ```
 
 ---
 
-## 1. Deep Conceptual Walkthrough: Gemini 2.5 Model Family & Thinking Budgets
+## 1. Deep Conceptual Walkthrough: Gemini 3.7 / 3.1 Model Family & Thinking Budgets
 
-The Gemini 2.5 generation introduces **native hybrid thinking models** capable of reasoning through multi-step problems before emitting their final answer.
+The Gemini 3.7 / 3.1 generation introduces **native hybrid thinking models** capable of reasoning through multi-step problems before emitting their final answer.
 
-### Gemini 2.5 Flash vs. Gemini 2.5 Pro Decision Matrix
+### Gemini 3.7 Flash vs. Gemini 3.1 Pro Decision Matrix
 
 | Model ID | Sweet Spot | Context Window | Speed & Cost | When to Use in Your App |
 | :--- | :--- | :--- | :--- | :--- |
-| **`gemini-2.5-flash`** | High-frequency, low-latency multimodal tasks | Up to **1,048,576 tokens** (1M+) | **Ultra-fast** & lowest cost per token | Real-time UI copilots, classification, summarization, extraction, and high-QPS API endpoints. |
-| **`gemini-2.5-pro`** | Deep reasoning, complex coding, architecture & STEM | Up to **1,048,576+ tokens** (1M–2M) | Moderate latency, higher reasoning density | Complex product strategy, multi-file code synthesis, legal/financial analysis, and intricate agent planning. |
+| **`gemini-3.7-flash`** | High-frequency, low-latency multimodal tasks | Up to **1,048,576 tokens** (1M+) | **Ultra-fast** & lowest cost per token | Real-time UI copilots, classification, summarization, extraction, and high-QPS API endpoints. |
+| **`gemini-3.1-pro`** | Deep reasoning, complex coding, architecture & STEM | Up to **1,048,576+ tokens** (1M–2M) | Moderate latency, higher reasoning density | Complex product strategy, multi-file code synthesis, legal/financial analysis, and intricate agent planning. |
 
 ### Controlling Reasoning with `thinking_config`
-With Gemini 2.5 models, you do not have to choose between a "non-thinking" model and a "slow thinking" model—you control the exact **Thinking Token Budget** per API call!
+With Gemini 3.x models (`gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-3.1-pro`), you do not have to choose between a "non-thinking" model and a "slow thinking" model—you control the exact **Thinking Token Budget** per API call!
 
 - **`thinking_budget = 0`**: Disables internal thinking tokens for minimum time-to-first-token (ideal for instant chat replies or simple classification).
 - **`thinking_budget = 1024` to `4096`**: Allocates a dedicated scratchpad of reasoning tokens so the model can plan edge cases, check constraints, and self-correct before generating output.
@@ -68,7 +68,7 @@ from google.genai import types
 client = genai.Client()
 
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.7-flash",
     contents="Design a pricing strategy for an AI hardware wearable with a $78 BOM cost.",
     config=types.GenerateContentConfig(
         thinking_config=types.ThinkingConfig(
@@ -101,33 +101,33 @@ When you combine **System Instructions** with **Structured Outputs (`response_sc
 
 ---
 
-## 3. Multimodal Media Synthesis: Imagen 3 & Veo
+## 3. Multimodal Media Synthesis: Gemini 3.1 Flash Image (Nano Banana 2) & Gemini Omni 1.1 Flash
 
 Our **AI Product Studio** doesn't just write text specs—it generates studio-grade visual and video assets using the exact same `genai.Client()`!
 
-### Photorealistic Image Generation with Imagen 3 (`client.models.generate_images`)
-- **Model:** `imagen-3.0-generate-002`
+### Photorealistic Image Generation with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) (`client.models.generate_content`)
+- **Model:** `gemini-3.1-flash-image`
 - **Capabilities:** Crisp typography rendering, studio lighting control, aspect ratio selection (`1:1`, `16:9`, `9:16`, `4:3`, `3:4`), and person-generation safety controls.
 
-### Cinematic Video Generation with Veo (`client.models.generate_videos`)
-- **Model:** `veo-2.0-generate-001`
-- **Asynchronous Operation Pattern:** Because rendering high-definition physics-accurate video takes ~30–90 seconds, `client.models.generate_videos(...)` returns a long-running `operation` object that you poll cleanly with `client.operations.get(operation)`.
+### Cinematic Video Generation with Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (`client.interactions.create`)
+- **Model:** `gemini-omni-1.1-flash`
+- **Asynchronous Operation Pattern:** Because rendering high-definition physics-accurate video takes ~30–90 seconds, `client.interactions.create(...)` returns a long-running `operation` object that you poll cleanly with `client.operations.get(operation)`.
 
 ---
 
 ## 🛠️ Hands-On Build: Stage 1 of the Flagship Project (`Product Studio Creative Engine`)
 
 Let's build the complete, copy-pasteable **Stage 1 Creative Engine** in both **Python** and **TypeScript**. Given any product concept, this engine:
-1. Uses **Gemini 2.5 Flash/Pro** with a `thinking_budget` and **Pydantic Structured Outputs** to generate a complete `ProductLaunchBundle`.
-2. Feeds the generated `imagen_prompt` directly into **Imagen 3** to render a high-resolution product hero image (`product_hero.png`).
-3. Feeds the generated `veo_video_prompt` directly into **Veo** to render a cinematic product launch video (`product_reveal.mp4`).
+1. Uses **Gemini 3.7 Flash/Pro** with a `thinking_budget` and **Pydantic Structured Outputs** to generate a complete `ProductLaunchBundle`.
+2. Feeds the generated `image_prompt` directly into **Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)** to render a high-resolution product hero image (`product_hero.png`).
+3. Feeds the generated `omni_video_prompt` directly into **Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)** to render a cinematic product launch video (`product_reveal.mp4`).
 
 ### Complete Python Implementation (`stage1_creative_engine.py`)
 
 ```python
 """
 Flagship Milestone Project — Stage 1: AI Product Studio Creative Engine
-Generates Structured Product Specs (Gemini 2.5) + Hero Art (Imagen 3) + Video Reel (Veo).
+Generates Structured Product Specs (Gemini 3.7 / 3.1) + Hero Art (Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)) + Video Reel (Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)).
 """
 
 from io import BytesIO
@@ -154,11 +154,11 @@ class ProductLaunchBundle(BaseModel):
     elevator_pitch: str = Field(description="Compelling 2-sentence product summary")
     key_features: List[str] = Field(description="Top 4 technical differentiators")
     target_personas: List[TargetPersona] = Field(description="2 distinct target personas")
-    imagen_prompt: str = Field(
-        description="Highly detailed studio photography prompt for Imagen 3 (lighting, lens, materials, composition)"
+    image_prompt: str = Field(
+        description="Highly detailed studio photography prompt for Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) (lighting, lens, materials, composition)"
     )
-    veo_video_prompt: str = Field(
-        description="Cinematic 6-second camera movement and lighting prompt for Veo video generation"
+    omni_video_prompt: str = Field(
+        description="Cinematic 6-second camera movement and lighting prompt for Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) video generation"
     )
 
 
@@ -170,7 +170,7 @@ def build_product_studio_assets(raw_idea: str, generate_video: bool = False) -> 
 
     print(f"🚀 Step 1/3: Synthesizing Structured Product Strategy for: '{raw_idea}'...")
     spec_response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents=f"<user_product_brief>{raw_idea}</user_product_brief>",
         config=types.GenerateContentConfig(
             system_instruction=(
@@ -188,16 +188,16 @@ def build_product_studio_assets(raw_idea: str, generate_video: bool = False) -> 
     # Parse directly into our validated Pydantic model
     bundle: ProductLaunchBundle = spec_response.parsed
     print(f"✅ Generated Product: {bundle.product_name} — '{bundle.tagline}'")
-    print(f"📸 Imagen 3 Prompt : {bundle.imagen_prompt}")
-    print(f"🎬 Veo Video Prompt: {bundle.veo_video_prompt}")
+    print(f"📸 Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Prompt : {bundle.image_prompt}")
+    print(f"🎬 Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) Video Prompt: {bundle.omni_video_prompt}")
 
     # -----------------------------------------------------------------------
-    # 3. Generate Photorealistic Hero Image with Imagen 3
+    # 3. Generate Photorealistic Hero Image with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)
     # -----------------------------------------------------------------------
-    print("\n🎨 Step 2/3: Rendering 16:9 Studio Hero Shot with Imagen 3...")
-    image_result = client.models.generate_images(
-        model="imagen-3.0-generate-002",
-        prompt=bundle.imagen_prompt,
+    print("\n🎨 Step 2/3: Rendering 16:9 Studio Hero Shot with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)...")
+    image_result = client.models.generate_content(
+        model="gemini-3.1-flash-image",
+        prompt=bundle.image_prompt,
         config=types.GenerateImagesConfig(
             number_of_images=1,
             aspect_ratio="16:9",
@@ -212,13 +212,13 @@ def build_product_studio_assets(raw_idea: str, generate_video: bool = False) -> 
         print("💾 Saved high-resolution hero image to ./product_hero.png")
 
     # -----------------------------------------------------------------------
-    # 4. Generate Cinematic Product Reveal Video with Veo (Optional Flag)
+    # 4. Generate Cinematic Product Reveal Video with Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) (Optional Flag)
     # -----------------------------------------------------------------------
     if generate_video:
-        print("\n🎬 Step 3/3: Submitting Cinematic Video Generation Job to Veo...")
-        operation = client.models.generate_videos(
-            model="veo-2.0-generate-001",
-            prompt=bundle.veo_video_prompt,
+        print("\n🎬 Step 3/3: Submitting Cinematic Video Generation Job to Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)...")
+        operation = client.interactions.create(
+            model="gemini-omni-1.1-flash",
+            prompt=bundle.omni_video_prompt,
             config=types.GenerateVideosConfig(
                 aspect_ratio="16:9",
                 person_generation="allow_adult",
@@ -226,7 +226,7 @@ def build_product_studio_assets(raw_idea: str, generate_video: bool = False) -> 
         )
 
         while not operation.done:
-            print("⏳ Veo rendering in progress... checking again in 10 seconds...")
+            print("⏳ Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) rendering in progress... checking again in 10 seconds...")
             time.sleep(10)
             operation = client.operations.get(operation)
 
@@ -263,7 +263,7 @@ async function buildProductStudioAssets(rawIdea: string) {
   console.log(`🚀 Synthesizing Structured Product Strategy for: "${rawIdea}"...`);
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.7-flash",
     contents: `<user_product_brief>${rawIdea}</user_product_brief>`,
     config: {
       systemInstruction:
@@ -287,9 +287,9 @@ async function buildProductStudioAssets(rawIdea: string) {
   const bundle = JSON.parse(response.text!);
   console.log(`✅ Generated Product: ${bundle.productName} — "${bundle.tagline}"`);
 
-  // Render Hero Image with Imagen 3
-  const imgResponse = await ai.models.generateImages({
-    model: "imagen-3.0-generate-002",
+  // Render Hero Image with Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2)
+  const imgResponse = await ai.models.generateContent({
+    model: "gemini-3.1-flash-image",
     prompt: bundle.imagenPrompt,
     config: {
       numberOfImages: 1,
@@ -325,21 +325,21 @@ With **Stage 1** complete, our **AI Product Studio** now possesses its core crea
 ## 📝 Module 02 Self-Assessment Quiz
 
 <details>
-<summary><strong>Question 1: How do you guarantee that Gemini 2.5 always returns valid JSON matching your exact data model without markdown backticks?</strong></summary>
+<summary><strong>Question 1: How do you guarantee that Gemini 3.7 / 3.1 always returns valid JSON matching your exact data model without markdown backticks?</strong></summary>
 
 **Answer:**
 Set `response_mime_type="application/json"` AND pass a Pydantic class (or JSON Schema) to `response_schema=...` inside `types.GenerateContentConfig(...)`. The SDK automatically parses the result into `response.parsed`.
 </details>
 
 <details>
-<summary><strong>Question 2: When should you set `thinking_budget=0` vs. `thinking_budget=2048` on `gemini-2.5-flash`?</strong></summary>
+<summary><strong>Question 2: When should you set `thinking_budget=0` vs. `thinking_budget=2048` on `gemini-3.7-flash`?</strong></summary>
 
 **Answer:**
 Use `thinking_budget=0` when you need ultra-low latency for straightforward tasks (like routing, classification, or instant chat acknowledgments). Use a positive budget like `thinking_budget=2048` when the task requires multi-step planning, constraint satisfaction, mathematical reasoning, or architectural synthesis.
 </details>
 
 <details>
-<summary><strong>Question 3: Why does Veo video generation (`client.models.generate_videos`) return an operation object rather than immediate bytes?</strong></summary>
+<summary><strong>Question 3: Why does Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`) video generation (`client.interactions.create`) return an operation object rather than immediate bytes?</strong></summary>
 
 **Answer:**
 High-definition temporal video synthesis is computationally intensive and typically takes tens of seconds to complete. Returning a long-running `operation` allows your server to poll asynchronously (`client.operations.get(operation)`) without holding open or timing out a synchronous HTTP connection.
@@ -350,10 +350,10 @@ High-definition temporal video synthesis is computationally intensive and typica
 ## 🔗 Verified Public References & Official Documentation
 
 - **Gemini Models Overview & Capabilities:** [https://ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
-- **Gemini 2.5 Thinking & Reasoning Budgets Guide:** [https://ai.google.dev/gemini-api/docs/thinking](https://ai.google.dev/gemini-api/docs/thinking)
+- **Gemini 3.7 / 3.1 Thinking & Reasoning Budgets Guide:** [https://ai.google.dev/gemini-api/docs/thinking](https://ai.google.dev/gemini-api/docs/thinking)
 - **Structured Outputs (JSON Schema & Pydantic):** [https://ai.google.dev/gemini-api/docs/structured-output](https://ai.google.dev/gemini-api/docs/structured-output)
-- **Imagen 3 Image Generation Guide:** [https://ai.google.dev/gemini-api/docs/imagen](https://ai.google.dev/gemini-api/docs/imagen)
-- **Veo Video Generation Guide:** [https://ai.google.dev/gemini-api/docs/video](https://ai.google.dev/gemini-api/docs/video)
+- **Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) Image Generation Guide:** [https://ai.google.dev/gemini-api/docs/image-generation](https://ai.google.dev/gemini-api/docs/image-generation)
+- **Gemini Omni 1.1 Flash Video Generation Guide:** [https://ai.google.dev/gemini-api/docs/video](https://ai.google.dev/gemini-api/docs/video)
 - **Prompt Engineering & System Instructions Best Practices:** [https://ai.google.dev/gemini-api/docs/prompting-strategies](https://ai.google.dev/gemini-api/docs/prompting-strategies)
 
 ---

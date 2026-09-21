@@ -2,7 +2,7 @@
 
 > **Navigation:** [← Module 03: Live Models, Agents & Antigravity SDK](../module-03-live-agents-antigravity-sdk/README.md) | [Course Home (`../README.md`)](../README.md) | **Next:** [🎓 Surprise Finisher: Graduate to Use Antigravity →](../surprise-finisher-graduate-to-antigravity/README.md)
 
-Welcome to **Module 04**! You have designed, coded, and tested both the **Stage 1 Multimodal Creative Engine** (Gemini 2.5 + Imagen 3 + Veo) and the **Stage 2 Live Multimodal Copilot** (`client.aio.live.connect` + autonomous tool execution). Now it is time to cross the bridge from a local developer laptop to a **globally scalable, zero-downtime, defense-in-depth cloud production service**.
+Welcome to **Module 04**! You have designed, coded, and tested both the **Stage 1 Multimodal Creative Engine** (Gemini 3.7 / 3.1 + Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) + Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`)) and the **Stage 2 Live Multimodal Copilot** (`client.aio.live.connect` + autonomous tool execution). Now it is time to cross the bridge from a local developer laptop to a **globally scalable, zero-downtime, defense-in-depth cloud production service**.
 
 In this module, you will assemble **Stage 3 of the Flagship Milestone Project**:
 1. Unify Stage 1 and Stage 2 into a production **FastAPI + WebSocket server** with built-in **App Security guardrails**.
@@ -43,7 +43,7 @@ flowchart TB
 
     subgraph CloudRun["☁️ Google Cloud Run (Serverless Container)"]
         Container["FastAPI + Uvicorn Non-Root Container\n• --session-affinity (WebSockets)\n• --timeout=3600\n• GEMINI_API_KEY mounted from Secret Manager"]
-        Stage1["POST /api/v1/studio/generate\n(Gemini 2.5 + Imagen 3 + Veo)"]
+        Stage1["POST /api/v1/studio/generate\n(Gemini 3.7 / 3.1 + Gemini 3.1 Flash Image (`gemini-3.1-flash-image` / Nano Banana 2) + Gemini Omni 1.1 Flash (`gemini-omni-1.1-flash`))"]
         Stage2["WSS /ws/v1/copilot/live\n(Gemini Live API + Tool Loop)"]
     end
 
@@ -188,8 +188,8 @@ class ProductSpecResponse(BaseModel):
     product_name: str
     tagline: str
     key_features: List[str]
-    imagen_prompt: str
-    veo_video_prompt: str
+    image_prompt: str
+    omni_video_prompt: str
 
 
 # Standard Production Safety Settings
@@ -225,7 +225,7 @@ async def generate_product_spec(req: ProductBriefRequest, request: Request) -> P
 
     client = genai.Client()
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.7-flash",
         contents=f"<untrusted_user_brief>{safe_brief}</untrusted_user_brief>",
         config=types.GenerateContentConfig(
             system_instruction=(
@@ -253,7 +253,7 @@ async def live_copilot_websocket(websocket: WebSocket) -> None:
 
     try:
         async with client.aio.live.connect(
-            model="gemini-2.0-flash-live-001",
+            model="gemini-3.8-live",
             config=types.LiveConnectConfig(
                 response_modalities=["TEXT"],
                 system_instruction=types.Content(
