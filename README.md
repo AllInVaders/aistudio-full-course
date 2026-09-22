@@ -5,6 +5,7 @@
 [![Language: English](https://img.shields.io/badge/Curriculum-English-2563eb?style=for-the-badge)](./en/README.md)
 [![Idioma: Español](https://img.shields.io/badge/Curr%C3%ADculo-Espa%C3%B1ol-059669?style=for-the-badge)](./es/README.md)
 [![Interactive Web Portal](https://img.shields.io/badge/Interactive_Portal-GitHub_Pages-7c3aed?style=for-the-badge)](https://allinvaders.github.io/aistudio-full-course/)
+[![Google Slides Deck](https://img.shields.io/badge/Google_Slides-20--Slide_Playbook-ea4335?style=for-the-badge)](https://docs.google.com/presentation/d/1aDe9latGA8QLlwMWxHqblG7tu48976AZWXW5bxoqAtE/edit)
 [![Google GenAI SDK](https://img.shields.io/badge/SDK-google--genai-f59e0b?style=for-the-badge)](https://github.com/googleapis/python-genai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-334155?style=for-the-badge)](./LICENSE)
 
@@ -17,6 +18,7 @@
 | **English Edition** | Full 4-module hands-on engineering course + Surprise Finisher ("Graduate to Antigravity") + Public References | [**Start English Track →**](./en/README.md) |
 | **Edición en Español** | Curso práctico completo de 4 módulos + Cierre Sorpresa ("Graduación hacia Antigravity") + Referencias Públicas | [**Iniciar Curso en Español →**](./es/README.md) |
 | **Interactive Web Portal** | Bilingual browser-based learning app (`EN` / `ES` live toggle, progress tracker, quizzes, architecture diagrams) | [**Open Web Portal (`docs/`) →**](./docs/index.html) |
+| **Google Slides Visual Playbook** | 20-slide native editable Google Slides deck with API Key setup, GitHub links & bilingual copy-paste prompts | [**Open Google Slides ↗**](https://docs.google.com/presentation/d/1aDe9latGA8QLlwMWxHqblG7tu48976AZWXW5bxoqAtE/edit) · [**Playbook (`slides/`) →**](./slides/README.md) |
 
 ---
 
