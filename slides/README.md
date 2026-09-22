@@ -1,9 +1,9 @@
 # Google AI Studio: Zero to Hero → Antigravity — Course Presentation & Live Testing Playbook
 
-[![Open Google Slides Presentation](https://img.shields.io/badge/Google_Slides-Open_20--Slide_Deck-f59e0b?style=for-the-badge)](https://docs.google.com/presentation/d/1aDe9latGA8QLlwMWxHqblG7tu48976AZWXW5bxoqAtE/edit)
+[![Open Google Slides Presentation](https://img.shields.io/badge/Google_Slides-Open_20--Slide_Deck-f59e0b?style=for-the-badge)](https://docs.google.com/presentation/d/1mYxjBzqB56KKXE7WrFRqiRQJo3K9mvRZ9iKYGdgGJ3M/edit)
 [![GitHub Course Repository](https://img.shields.io/badge/GitHub-AllInVaders%2Faistudio--full--course-2563eb?style=for-the-badge)](https://github.com/AllInVaders/aistudio-full-course)
 
-- **Live Editable Google Slides Deck (20 Slides + Speaker Notes)**: [https://docs.google.com/presentation/d/1aDe9latGA8QLlwMWxHqblG7tu48976AZWXW5bxoqAtE/edit](https://docs.google.com/presentation/d/1aDe9latGA8QLlwMWxHqblG7tu48976AZWXW5bxoqAtE/edit)
+- **Live Editable Google Slides Deck (20 Slides + Speaker Notes)**: [https://docs.google.com/presentation/d/1mYxjBzqB56KKXE7WrFRqiRQJo3K9mvRZ9iKYGdgGJ3M/edit](https://docs.google.com/presentation/d/1mYxjBzqB56KKXE7WrFRqiRQJo3K9mvRZ9iKYGdgGJ3M/edit)
 - **Interactive Course Web Portal (`EN` / `ES`)**: [https://allinvaders.github.io/aistudio-full-course/](https://allinvaders.github.io/aistudio-full-course/)
 
 ---

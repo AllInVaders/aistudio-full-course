@@ -65,9 +65,9 @@ def add_header(ops, sid, category, title, subtitle, slide_num, total_slides=20):
         "op": "add-shape",
         "slide": sid,
         "shape_type": "RECTANGLE",
-        "x": 475,
+        "x": 450,
         "y": 14,
-        "width": 165,
+        "width": 190,
         "height": 20,
         "background_color": BG_PILL,
     })
@@ -75,12 +75,12 @@ def add_header(ops, sid, category, title, subtitle, slide_num, total_slides=20):
         "op": "add-textbox",
         "slide": sid,
         "text": "github.com/AllInVaders/aistudio-full-course",
-        "x": 478,
+        "x": 452,
         "y": 16,
-        "width": 160,
+        "width": 186,
         "height": 16,
         "font_family": "Roboto",
-        "font_size": 7.5,
+        "font_size": 7.2,
         "bold": True,
         "color": TEXT_SKY,
         "alignment": "center",
@@ -501,6 +501,7 @@ def add_split_case_study(ops, sid, left_card, right_card, bottom_preview):
             "font_size": 10.5,
             "bold": True,
             "color": TEXT_WHITE,
+            "alignment": "left",
         })
         ops.append({
             "op": "add-textbox",
@@ -522,7 +523,7 @@ def add_split_case_study(ops, sid, left_card, right_card, bottom_preview):
         "x": 40,
         "y": 208,
         "width": 640,
-        "height": 124,
+        "height": 128,
         "background_color": BG_PREVIEW,
     })
     ops.append({
@@ -578,13 +579,13 @@ def add_split_case_study(ops, sid, left_card, right_card, bottom_preview):
         "slide": sid,
         "text": bottom_preview["code"],
         "x": 52,
-        "y": 234,
+        "y": 233,
         "width": 616,
-        "height": 92,
+        "height": 98,
         "font_family": "Roboto Mono",
-        "font_size": 8.3,
+        "font_size": 7.6,
         "color": TEXT_WHITE,
-        "line_spacing": 120,
+        "line_spacing": 110,
     })
 
 
@@ -715,7 +716,7 @@ def build_all_slides():
             "link_url": f"{GITHUB_BLOB}/.env.example",
         },
         {
-            "icon": "fact_check",
+            "icon": "check",
             "accent": ACCENT_GREEN,
             "title": "Step 5 · Verify Setup",
             "body": "• pip install -U 'google-genai>=2.3.0'\n• Run verify_setup.py\n• Confirm token counter & model access",
@@ -927,7 +928,7 @@ def build_all_slides():
             "link_url": f"{GITHUB_BLOB}/labs/module-02-prompts-media/product_studio_stage1.py",
         },
         {
-            "icon": "verified_user",
+            "icon": "security",
             "accent": ACCENT_RED,
             "title": "5. Safety Boundary",
             "body": "Explicitly refuse prompt-injection attempts that ask to ignore instructions or leak secrets.",
@@ -985,7 +986,7 @@ def build_all_slides():
             "link_url": f"{GITHUB_BLOB}/notebooks/01_Setup_Models_and_Token_Economics.ipynb",
         },
         {
-            "icon": "verified_user",
+            "icon": "security",
             "accent": ACCENT_GREEN,
             "title": "Idea #3 · Red-Team Security Sentinel",
             "body": "• Role: Application Security Architect\n• Task: Audit user prompts and API payloads for Prompt Injection, PII leakage, and IAM over-privilege\n• Output: Threat severity score (1-10) + remediated Python code.",
@@ -1033,7 +1034,7 @@ def build_all_slides():
             "body": "Asking 'Please return JSON' in a prompt often produces ```json markdown wrappers, missing keys, or hallucinated field types that crash production APIs.",
         },
         {
-            "icon": "fact_check",
+            "icon": "check",
             "accent": ACCENT_GREEN,
             "title": "With response_schema (Constrained Decoding)",
             "body": "Setting response_mime_type='application/json' + response_schema=ProductLaunchKit forces token generation to strictly match your schema.",
@@ -1045,14 +1046,10 @@ def build_all_slides():
             "link_url": f"{GITHUB_BLOB}/labs/module-02-prompts-media/product_studio_stage1.py",
             "code": (
                 "class ProductLaunchKit(BaseModel):\n"
-                "    product_name: str\n"
-                "    tagline: str\n"
-                "    key_features: list[str]\n"
-                "    image_prompt: str\n"
-                "    omni_video_prompt: str\n\n"
+                "    product_name: str; tagline: str; key_features: list[str]\n"
+                "    image_prompt: str; omni_video_prompt: str\n\n"
                 "resp = client.models.generate_content(\n"
-                "    model='gemini-3.8-flash',\n"
-                "    contents='Create a launch kit for smart AR cycling glasses.',\n"
+                "    model='gemini-3.8-flash', contents='Create a launch kit for smart AR cycling glasses.',\n"
                 "    config=types.GenerateContentConfig(response_mime_type='application/json', response_schema=ProductLaunchKit)\n"
                 ")"
             ),
@@ -1117,7 +1114,7 @@ def build_all_slides():
             "link_url": f"{GITHUB_BLOB}/notebooks/02_Prompts_Structured_Outputs_Gemini_Image_and_Omni_Video.ipynb",
         },
         {
-            "icon": "verified_user",
+            "icon": "security",
             "accent": ACCENT_PURPLE,
             "title": "Nano Banana Pro\n(gemini-3-pro-image)",
             "body": "• Studio-grade 4K visual fidelity\n• Complex multi-object compositions and crisp, poster-grade embedded typography rendering\n• Flagship brand & campaign visuals",
@@ -1413,7 +1410,7 @@ def build_all_slides():
             "link_url": "https://ai.google.dev/gemini-api/docs/grounding",
         },
         {
-            "icon": "fact_check",
+            "icon": "check",
             "accent": ACCENT_GREEN,
             "title": "3. Built-In Code Execution\n(Python Sandbox)",
             "body": "• Toggle 'Code Execution' ON in AI Studio\n• Gemini writes and runs Python code in a secure sandbox to solve math, plot charts, and verify data",
@@ -1543,7 +1540,7 @@ def build_all_slides():
             "link_url": f"{GITHUB_BLOB}/labs/module-03-live-agents/live_copilot_agent.py",
         },
         {
-            "icon": "fact_check",
+            "icon": "check",
             "accent": ACCENT_GREEN,
             "title": "4. Live Camera + Screen Share Grounding",
             "body": "Stream live webcam objects, whiteboard sketches, or IDE screens so your voice agent sees and critiques what you are pointing at in real time.",
@@ -1647,7 +1644,7 @@ def build_all_slides():
             "body": "The browser connects to /ws/live-copilot on our FastAPI server, which maintains a persistent async session with gemini-3.8-live and executes Python tools securely on the server.",
         },
         {
-            "icon": "verified_user",
+            "icon": "security",
             "accent": ACCENT_GREEN,
             "title": "Zero Client-Side API Key Exposure",
             "body": "Because client.aio.live.connect runs inside your backend container using Secret Manager credentials, your GEMINI_API_KEY is never exposed in browser DevTools.",
@@ -1699,7 +1696,7 @@ def build_all_slides():
     )
     add_five_pipeline(ops, sid, [
         {
-            "icon": "verified_user",
+            "icon": "security",
             "accent": ACCENT_RED,
             "title": "1. Input Guardrails",
             "body": "Sanitize inputs, block prompt-injection patterns, and enforce strict Pydantic schemas in FastAPI.",
